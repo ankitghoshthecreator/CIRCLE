@@ -1,0 +1,31 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: circle-trainer
+  namespace: circle
+  labels:
+    app: circle-trainer
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: circle-trainer
+  template:
+    metadata:
+      labels:
+        app: circle-trainer
+    spec:
+      containers:
+      - name: trainer
+        image: circle-trainer:latest
+        imagePullPolicy: IfNotPresent
+        envFrom:
+        - secretRef:
+            name: circle-secrets
+            optional: true
+        resources:
+          limits:
+            nvidia.com/gpu: "1"
+            memory: "8Gi"
+          requests:
+            memory: "4Gi"

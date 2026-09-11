@@ -1,0 +1,29 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: circle-eval
+  namespace: circle
+  labels:
+    app: circle-eval
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: circle-eval
+  template:
+    metadata:
+      labels:
+        app: circle-eval
+    spec:
+      containers:
+      - name: eval
+        image: circle-eval:latest
+        imagePullPolicy: IfNotPresent
+        envFrom:
+        - secretRef:
+            name: circle-secrets
+            optional: true
+        resources:
+          requests:
+            memory: "1Gi"
+            cpu: "500m"
