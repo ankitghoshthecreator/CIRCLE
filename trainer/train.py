@@ -17,6 +17,7 @@ from trainer.curriculum.dataset_handler import (
     save_stage_dataset,
     CurriculumExample
 )
+from trainer.replay_buffer import ReplayBufferManager
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 
@@ -42,13 +43,19 @@ def train_stage(
     model, tokenizer = load_qlora_model_and_tokenizer(model_name_or_path="gpt2", is_trainable=True)
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-    # Step 2: Load curriculum dataset
+    # Step 2: Load curriculum dataset and blend replay buffer samples
     if custom_examples:
-        examples = custom_examples
+        raw_examples = custom_examples
     else:
-        examples = load_stage_dataset(stage_id, data_dir=data_dir)
-        # Ensure seed dataset is saved locally if it was missing
-        save_stage_dataset(stage_id, examples, data_dir=data_dir)
+        raw_examples = load_stage_dataset(stage_id, data_dir=data_dir)
+        save_stage_dataset(stage_id, raw_examples, data_dir=data_dir)
+
+    replay_manager = ReplayBufferManager(data_dir=data_dir)
+    examples = replay_manager.get_blended_dataset(
+        current_stage_id=stage_id,
+        current_examples=raw_examples,
+        replay_ratio=stage.replay_ratio
+    )
 
     logging.info(f"Loaded {len(examples)} training examples for Stage {stage_id}.")
     dataset = CurriculumDataset(examples, tokenizer)
