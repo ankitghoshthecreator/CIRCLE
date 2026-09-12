@@ -1,0 +1,19 @@
+{
+  "stage_id": 1,
+  "name": "Base English",
+  "description": "Next-token prediction on general English text to teach token-level fluency, basic syntax, and vocabulary distribution.",
+  "objectives": ["token_fluency", "basic_syntax", "vocab_distribution"],
+  "target_competence_score": 0.85,
+  "hyperparameters": {
+    "default_epochs": 2,
+    "batch_size": 1,
+    "grad_accum_steps": 4,
+    "learning_rate": 0.0002
+  },
+  "replay_ratio": 0.0,
+  "probe_prompts": [
+    "The primary purpose of a language model is to",
+    "Machine learning algorithms process data in order to",
+    "When writing software, clean code helps developers to"
+  ]
+}

@@ -1,0 +1,18 @@
+{
+  "stage_id": 4,
+  "name": "Punctuation",
+  "description": "Fine-grained use of punctuation (. , ! ?) and clause boundaries to prevent run-on sentences.",
+  "objectives": ["clause_boundaries", "punctuation_precision", "sentence_segmentation"],
+  "target_competence_score": 0.85,
+  "hyperparameters": {
+    "default_epochs": 2,
+    "batch_size": 1,
+    "grad_accum_steps": 4,
+    "learning_rate": 0.0002
+  },
+  "replay_ratio": 0.25,
+  "probe_prompts": [
+    "Add correct punctuation and capitalization to: although it was raining we decided to go for a run in the park",
+    "Separate into proper sentences: the training loop finished successfully loss dropped steadily we saved the checkpoint"
+  ]
+}

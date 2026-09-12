@@ -7,60 +7,18 @@ import torch
 # Ensure repository root is on sys.path
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from torch.utils.data import Dataset, DataLoader
-from transformers import DataCollatorForLanguageModeling, get_linear_schedule_with_warmup
+from torch.utils.data import DataLoader
+from transformers import get_linear_schedule_with_warmup
 from trainer.model_loader import load_qlora_model_and_tokenizer, load_stage_adapter
 from trainer.curriculum.stage_config import STAGES
+from trainer.curriculum.dataset_handler import (
+    CurriculumDataset,
+    load_stage_dataset,
+    save_stage_dataset,
+    CurriculumExample
+)
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
-
-class SimpleTextDataset(Dataset):
-    """Dataset wrapper for tokenized text passages."""
-    def __init__(self, texts: list, tokenizer, max_length: int = 128):
-        self.encodings = tokenizer(
-            texts,
-            truncation=True,
-            max_length=max_length,
-            padding="max_length",
-            return_tensors="pt"
-        )
-
-    def __len__(self):
-        return len(self.encodings["input_ids"])
-
-    def __getitem__(self, idx):
-        return {
-            "input_ids": self.encodings["input_ids"][idx],
-            "attention_mask": self.encodings["attention_mask"][idx],
-            "labels": self.encodings["input_ids"][idx].clone()
-        }
-
-def get_default_stage_samples(stage_id: int) -> list:
-    """Returns seed synthetic training samples for dry-run testing across curriculum stages."""
-    samples_map = {
-        1: [
-            "The quick brown fox jumps over the lazy dog.",
-            "Language models learn patterns from text sequentially.",
-            "PyTorch provides flexible tools for deep learning."
-        ],
-        2: [
-            "Passage: Artificial intelligence is transforming technology. Summary: AI transforms tech.",
-            "Passage: QLoRA enables fine-tuning models on low VRAM GPUs. Summary: QLoRA saves GPU VRAM."
-        ],
-        3: [
-            "Correct: She writes code every day. Incorrect: She write code every day.",
-            "Correct: They are building a neural network. Incorrect: They is building a neural network."
-        ],
-        4: [
-            "Clause test: Although it was raining, we decided to continue the experiment.",
-            "Punctuation test: Hello, user! How can I help you today?"
-        ],
-        5: [
-            "User: What is CIRCLE? Assistant: CIRCLE is a closed-loop curriculum training engine.",
-            "User: How does critique work? Assistant: The 70B critic analyzes outputs to commission data."
-        ]
-    }
-    return samples_map.get(stage_id, samples_map[1])
 
 def train_stage(
     stage_id: int = 1,
@@ -69,7 +27,8 @@ def train_stage(
     grad_accum_steps: int = 4,
     lr: float = 2e-4,
     checkpoint_dir: str = "./trainer/checkpoints",
-    data_texts: list = None
+    data_dir: str = "./data",
+    custom_examples: list = None
 ):
     if stage_id not in STAGES:
         raise ValueError(f"Invalid stage_id: {stage_id}. Choose between 1 and 5.")
@@ -77,14 +36,22 @@ def train_stage(
     stage = STAGES[stage_id]
     logging.info(f"=== Starting QLoRA Training for Stage {stage.stage_id}: {stage.name} ===")
     logging.info(f"Objectives: {stage.objectives}")
+    logging.info(f"Replay Ratio: {stage.replay_ratio}")
 
     # Step 1: Load 4-bit quantized base model and tokenizer
     model, tokenizer = load_qlora_model_and_tokenizer(model_name_or_path="gpt2", is_trainable=True)
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-    # Step 2: Prepare dataset & dataloader
-    texts = data_texts if data_texts else get_default_stage_samples(stage_id)
-    dataset = SimpleTextDataset(texts, tokenizer)
+    # Step 2: Load curriculum dataset
+    if custom_examples:
+        examples = custom_examples
+    else:
+        examples = load_stage_dataset(stage_id, data_dir=data_dir)
+        # Ensure seed dataset is saved locally if it was missing
+        save_stage_dataset(stage_id, examples, data_dir=data_dir)
+
+    logging.info(f"Loaded {len(examples)} training examples for Stage {stage_id}.")
+    dataset = CurriculumDataset(examples, tokenizer)
     dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=True)
 
     # Step 3: Optimizer and Scheduler
@@ -138,6 +105,7 @@ if __name__ == "__main__":
     parser.add_argument("--grad-accum", type=int, default=2, help="Gradient accumulation steps")
     parser.add_argument("--lr", type=float, default=2e-4, help="Learning rate")
     parser.add_argument("--checkpoint-dir", type=str, default="./trainer/checkpoints", help="Path to checkpoint directory")
+    parser.add_argument("--data-dir", type=str, default="./data", help="Path to datasets directory")
     args = parser.parse_args()
 
     train_stage(
@@ -146,5 +114,6 @@ if __name__ == "__main__":
         batch_size=args.batch_size,
         grad_accum_steps=args.grad_accum,
         lr=args.lr,
-        checkpoint_dir=args.checkpoint_dir
+        checkpoint_dir=args.checkpoint_dir,
+        data_dir=args.data_dir
     )

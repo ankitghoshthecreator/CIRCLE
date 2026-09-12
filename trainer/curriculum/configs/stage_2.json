@@ -1,0 +1,18 @@
+{
+  "stage_id": 2,
+  "name": "Summarization",
+  "description": "Compress long passages into faithful summaries, teaching internal meaning extraction over surface copying.",
+  "objectives": ["meaning_extraction", "passage_compression", "content_retention"],
+  "target_competence_score": 0.80,
+  "hyperparameters": {
+    "default_epochs": 2,
+    "batch_size": 1,
+    "grad_accum_steps": 4,
+    "learning_rate": 0.0002
+  },
+  "replay_ratio": 0.20,
+  "probe_prompts": [
+    "Summarize the following passage: Neural networks are computing systems inspired by biological neural networks. They consist of interconnected nodes that process information.",
+    "Summarize the following text: QLoRA allows parameter-efficient fine-tuning of large models on consumer GPUs by quantizing weights to 4-bit and injecting LoRA adapters."
+  ]
+}

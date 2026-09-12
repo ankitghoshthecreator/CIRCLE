@@ -1,0 +1,18 @@
+{
+  "stage_id": 5,
+  "name": "Conversational Understanding",
+  "description": "Multi-turn dialogue pragmatics, turn-taking, speaker tracking, and cross-turn context preservation.",
+  "objectives": ["turn_taking", "speaker_tracking", "context_carryover"],
+  "target_competence_score": 0.85,
+  "hyperparameters": {
+    "default_epochs": 2,
+    "batch_size": 1,
+    "grad_accum_steps": 4,
+    "learning_rate": 0.0002
+  },
+  "replay_ratio": 0.30,
+  "probe_prompts": [
+    "User: Hi, can you explain how CIRCLE handles catastrophic forgetting?\nAssistant:",
+    "User: What model does CIRCLE use for synthetic data generation?\nAssistant: It uses local Qwen 2.5 via Ollama.\nUser: And what does the critic model do?\nAssistant:"
+  ]
+}

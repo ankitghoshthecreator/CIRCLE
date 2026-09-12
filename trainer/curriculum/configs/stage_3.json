@@ -1,0 +1,18 @@
+{
+  "stage_id": 3,
+  "name": "Grammar",
+  "description": "Explicit syntactic well-formedness, subject-verb agreement, and tense consistency.",
+  "objectives": ["syntactic_correctness", "agreement", "tense_consistency"],
+  "target_competence_score": 0.85,
+  "hyperparameters": {
+    "default_epochs": 2,
+    "batch_size": 1,
+    "grad_accum_steps": 4,
+    "learning_rate": 0.0002
+  },
+  "replay_ratio": 0.20,
+  "probe_prompts": [
+    "Correct the grammatical errors in this sentence: They goes to the store yesterday to bought milk.",
+    "Fix the subject-verb agreement in: The team of engineers are working hard on the update."
+  ]
+}

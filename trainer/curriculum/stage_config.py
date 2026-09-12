@@ -1,5 +1,8 @@
-from dataclasses import dataclass, field
+import os
+import json
+from dataclasses import dataclass
 from typing import List, Dict
+from trainer.curriculum.dataset_handler import load_stage_config
 
 @dataclass
 class CurriculumStage:
@@ -7,42 +10,21 @@ class CurriculumStage:
     name: str
     description: str
     objectives: List[str]
-    replay_ratio: float = 0.2
+    target_competence_score: float
+    replay_ratio: float
+    probe_prompts: List[str]
 
-STAGES: Dict[int, CurriculumStage] = {
-    1: CurriculumStage(
-        stage_id=1,
-        name="Base English",
-        description="Next-token prediction on general English corpora for fluency and basic syntax.",
-        objectives=["token_fluency", "basic_syntax", "vocab_distribution"],
-        replay_ratio=0.0
-    ),
-    2: CurriculumStage(
-        stage_id=2,
-        name="Summarization",
-        description="Compress long passages into faithful summaries for meaning extraction.",
-        objectives=["meaning_extraction", "passage_compression", "content_retention"],
-        replay_ratio=0.2
-    ),
-    3: CurriculumStage(
-        stage_id=3,
-        name="Grammar",
-        description="Explicit syntactic well-formedness, subject-verb agreement, and tense consistency.",
-        objectives=["syntactic_correctness", "agreement", "tense_consistency"],
-        replay_ratio=0.2
-    ),
-    4: CurriculumStage(
-        stage_id=4,
-        name="Punctuation",
-        description="Fine-grained clause boundary marking and punctuation dynamics.",
-        objectives=["clause_boundaries", "punctuation_precision", "sentence_segmentation"],
-        replay_ratio=0.25
-    ),
-    5: CurriculumStage(
-        stage_id=5,
-        name="Conversational Understanding",
-        description="Multi-turn dialogue, speaker tracking, and context preservation.",
-        objectives=["turn_taking", "speaker_tracking", "context_carryover"],
-        replay_ratio=0.3
-    ),
-}
+def get_stage(stage_id: int) -> CurriculumStage:
+    """Loads CurriculumStage dataclass instance from JSON config file."""
+    config = load_stage_config(stage_id)
+    return CurriculumStage(
+        stage_id=config["stage_id"],
+        name=config["name"],
+        description=config["description"],
+        objectives=config["objectives"],
+        target_competence_score=config.get("target_competence_score", 0.85),
+        replay_ratio=config.get("replay_ratio", 0.2),
+        probe_prompts=config.get("probe_prompts", [])
+    )
+
+STAGES: Dict[int, CurriculumStage] = {stage_id: get_stage(stage_id) for stage_id in range(1, 6)}
