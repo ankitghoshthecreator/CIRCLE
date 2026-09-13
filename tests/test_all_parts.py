@@ -35,9 +35,9 @@ try:
     current = [CurriculumExample(input_text="Stage 1 text", target_text="", stage_id=1)]
     blended = mgr.get_blended_dataset(1, current, replay_ratio=0.0)
     assert blended == current, "Replay blending Stage 1 should return current data unchanged"
-    report(1, "Stage 1 replay_ratio=0.0 → no blending", PASS)
+    report(1, "Stage 1 replay_ratio=0.0 -> no blending", PASS)
 except Exception as e:
-    report(1, "Stage 1 replay_ratio=0.0 → no blending", FAIL, str(e))
+    report(1, "Stage 1 replay_ratio=0.0 -> no blending", FAIL, str(e))
 
 # ─── TEST 2: Large replay ratio (5.0) with tiny dataset → should not crash, cap at available ───
 try:
@@ -55,9 +55,9 @@ try:
     current = [CurriculumExample(input_text="Orphan stage text", target_text="", stage_id=2)]
     blended = mgr.get_blended_dataset(2, current, replay_ratio=0.3)
     assert len(blended) == len(current), "No prior data → should return current unchanged"
-    report(3, "Replay buffer with no prior data → returns current unchanged", PASS)
+    report(3, "Replay buffer with no prior data -> returns current unchanged", PASS)
 except Exception as e:
-    report(3, "Replay buffer with no prior data → returns current unchanged", FAIL, str(e))
+    report(3, "Replay buffer with no prior data -> returns current unchanged", FAIL, str(e))
 
 # ─── TEST 4: CurriculumDataset with empty input_text and target_text → must not crash ───
 print("\n[ CURRICULUM DATASET HANDLER ]")
@@ -167,4 +167,4 @@ if failed > 0:
     for tid, name, status, detail in results:
         if status == FAIL:
             print(f"    Test {tid:02d}: {name}")
-            print(f"    → {detail}")
+            print(f"    -> {detail}")

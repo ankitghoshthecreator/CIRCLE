@@ -141,7 +141,7 @@ except Exception as e:
     shutil.rmtree("./data_test_ratio", ignore_errors=True)
     report(4, "Replay ratio=0.2 yields correct proportional blend", FAIL, str(e))
 
-# ─── TEST 5: Stage identity preserved after dataset save→load roundtrip ───
+# ─── TEST 5: Stage identity preserved after dataset save->load roundtrip ───
 print("\n[ DATASET SAVE/LOAD ROUNDTRIP ]")
 try:
     from trainer.curriculum.dataset_handler import save_stage_dataset, load_stage_dataset, CurriculumExample
@@ -162,10 +162,10 @@ try:
         assert orig.metadata == loaded_ex.metadata
 
     shutil.rmtree(test_dir, ignore_errors=True)
-    report(5, "Dataset save→load roundtrip preserves all fields", PASS, f"Verified {len(examples)} examples")
+    report(5, "Dataset save->load roundtrip preserves all fields", PASS, f"Verified {len(examples)} examples")
 except Exception as e:
     shutil.rmtree("./data_test_roundtrip", ignore_errors=True)
-    report(5, "Dataset save→load roundtrip preserves all fields", FAIL, str(e))
+    report(5, "Dataset save->load roundtrip preserves all fields", FAIL, str(e))
 
 # ─── TEST 6: All 5 stage JSON configs load with correct hyperparameter types ───
 print("\n[ STAGE CONFIG VALIDATION ]")

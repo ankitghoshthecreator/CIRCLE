@@ -1,0 +1,37 @@
+# CIRCLE Tasks
+
+- [x] **Part 1: Project Architecture & Environment Setup**
+  - [x] Create `implementation_plan.md` and obtain approval
+  - [x] Create `parts.md` detailing all 16 project parts elaborately
+  - [x] Create `.gitignore`, `.env.example`, `requirements.txt`
+  - [x] Set up directory structure (`trainer`, `eval`, `generator`, `orchestrator`, `docker`)
+  - [x] Create Dockerfiles (`docker/trainer.Dockerfile`, `docker/eval.Dockerfile`, `docker/generator.Dockerfile`)
+  - [x] Create Kubernetes deployment manifests (`orchestrator/k8s/*.yaml`)
+  - [x] Create entrypoint Python skeleton files
+  - [x] Git commit and push Part 1 to GitHub repository `https://github.com/ankitghoshthecreator/CIRCLE`
+- [x] **Part 2: Base PyTorch Trainer & QLoRA Config**
+  - [x] Create Part 2 implementation plan and obtain approval
+  - [x] Implement 4-bit QLoRA model loader (`trainer/model_loader.py`)
+  - [x] Implement full training engine loop & adapter checkpointing (`trainer/train.py`)
+  - [x] Run dry-run training pass & verify adapter checkpoint saving/loading
+  - [x] Git commit and push Part 2 to GitHub repository
+- [x] **Part 3: Curriculum Stage Configuration & Dataset Schemas**
+  - [x] Create Part 3 implementation plan and obtain approval
+  - [x] Create stage 1-5 JSON configurations (`trainer/curriculum/configs/*.json`)
+  - [x] Implement dataset schemas & loaders (`trainer/curriculum/dataset_handler.py`)
+  - [x] Integrate curriculum dataset handler into `trainer/train.py`
+  - [x] Run automated tests & verify dataset collating
+  - [x] Git commit and push Part 3 to GitHub repository
+- [ ] **Part 4: Replay Buffer & Anti-Forgetting Mechanism**
+- [ ] **Part 5: Evaluator / Critic Agent Integration**
+- [ ] **Part 6: Structured Failure Mode Analysis & Parser**
+- [ ] **Part 7: Targeted Prompt Writer**
+- [ ] **Part 8: Lightweight Student Distillation Evaluator**
+- [ ] **Part 9: Local DeepSeek Data Generator Engine**
+- [ ] **Part 10: Synthetic Data Post-Processing & Validation**
+- [ ] **Part 11: Containerization & Docker Builds**
+- [ ] **Part 12: Kubernetes Manifests & Pod Specs**
+- [ ] **Part 13: Orchestrator Control Loop & State Engine**
+- [ ] **Part 14: Stage 1-3 Curriculum Probes & Initial Datasets**
+- [ ] **Part 15: Stage 4-5 Curriculum Probes & Dialogue Datasets**
+- [ ] **Part 16: End-to-End System Integration, Verification & Deployment**
