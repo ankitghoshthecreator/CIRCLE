@@ -16,7 +16,7 @@ class ReplayBufferManager:
         """Loads dataset examples for all completed prior stages (1 to current_stage_id - 1)."""
         prior_data = {}
         for stage_id in range(1, current_stage_id):
-            examples = load_stage_dataset(stage_id, data_dir=self.data_dir)
+            examples = load_stage_dataset(stage_id, data_dir=self.data_dir, use_seed_fallback=False)
             if examples:
                 prior_data[stage_id] = examples
         return prior_data

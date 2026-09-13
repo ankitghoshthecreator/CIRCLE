@@ -78,16 +78,19 @@ def save_stage_dataset(stage_id: int, examples: List[CurriculumExample], data_di
 
     logging.info(f"Saved {len(examples)} examples for Stage {stage_id} to '{file_path}'.")
 
-def load_stage_dataset(stage_id: int, data_dir: str = "./data") -> List[CurriculumExample]:
-    """Loads dataset for stage_id. If missing, returns default seed examples for that stage."""
+def load_stage_dataset(stage_id: int, data_dir: str = "./data", use_seed_fallback: bool = True) -> List[CurriculumExample]:
+    """Loads dataset for stage_id. If missing and use_seed_fallback=True, returns default seed examples."""
     file_path = os.path.join(data_dir, f"stage_{stage_id}", "dataset.json")
     if os.path.exists(file_path):
         with open(file_path, "r", encoding="utf-8") as f:
             raw_data = json.load(f)
             return [CurriculumExample(**item) for item in raw_data]
 
-    logging.info(f"No existing dataset file found at '{file_path}'. Loading default seed dataset...")
-    return get_default_seed_examples(stage_id)
+    if use_seed_fallback:
+        logging.info(f"No existing dataset file found at '{file_path}'. Loading default seed dataset...")
+        return get_default_seed_examples(stage_id)
+
+    return []
 
 def get_default_seed_examples(stage_id: int) -> List[CurriculumExample]:
     """Returns fallback initial seed examples for stage_id."""
