@@ -11,6 +11,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from trainer.model_loader import load_qlora_model_and_tokenizer, load_stage_adapter
 from trainer.curriculum.dataset_handler import load_stage_config
 from eval.critique import GroqCriticAgent
+from eval.failure_parser import FailureModeParser, save_failure_report
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 
@@ -69,13 +70,30 @@ def evaluate_stage_checkpoint(
         probe_results=probe_results
     )
 
-    # Step 4: Save critique report
+    # Step 4: Save raw critique report
     os.makedirs(output_dir, exist_ok=True)
     report_file = os.path.join(output_dir, f"stage_{stage_id}_critique.json")
     with open(report_file, "w", encoding="utf-8") as f:
         json.dump(critique_report, f, indent=2)
+    logging.info(f"Raw critique report saved to '{report_file}'.")
 
-    logging.info(f"Evaluation finished. Critique report saved to '{report_file}'.")
+    # Step 5: Parse critique into structured failure mode report (Part 6)
+    parser = FailureModeParser()
+    failure_report = parser.parse(
+        stage_id=stage_id,
+        stage_name=stage_name,
+        critique_raw=critique_report.get("critique_raw", "")
+    )
+    failure_report_path = save_failure_report(failure_report, output_dir=output_dir)
+
+    logging.info(
+        f"Failure mode report: {len(failure_report.failure_modes)} modes detected. "
+        f"Overall severity: {failure_report.overall_severity}. "
+        f"Advance to next stage: {failure_report.advance_to_next_stage}. "
+        f"Saved to '{failure_report_path}'."
+    )
+
+    critique_report["failure_mode_report"] = failure_report.model_dump()
     return critique_report
 
 if __name__ == "__main__":
