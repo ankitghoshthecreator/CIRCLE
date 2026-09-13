@@ -3,6 +3,9 @@ __pycache__/
 *.py[cod]
 *$py.class
 *.so
+
+# Eval reports (runtime-generated, not committed)
+eval/reports/
 .Python
 env/
 build/
