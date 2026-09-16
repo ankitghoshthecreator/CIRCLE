@@ -63,12 +63,12 @@ class LocalDataGeneratorEngine:
     def __init__(
         self,
         backend: str = "ollama",
-        endpoint_url: str = "http://localhost:11434",
+        endpoint_url: str = "http://127.0.0.1:11434",
         model_name: str = "deepseek-r1:32b",
         request_timeout_sec: float = 10.0
     ):
         self.backend = backend.lower()
-        self.endpoint_url = endpoint_url.rstrip("/")
+        self.endpoint_url = endpoint_url.strip().rstrip("/")
         self.model_name = model_name
         self.request_timeout_sec = request_timeout_sec
         self._endpoint_checked = False
@@ -97,14 +97,13 @@ class LocalDataGeneratorEngine:
         count = num_samples if num_samples is not None else spec.target_sample_count
         samples: List[SyntheticDataSample] = []
 
-        endpoint_active = self.is_endpoint_available()
-        if not endpoint_active:
+        if not self.is_endpoint_available():
             logger.debug(f"Local {self.backend} endpoint not detected at '{self.endpoint_url}'. Using Mock Fallback Generator.")
 
         for idx in range(1, count + 1):
-            if endpoint_active and self.backend == "ollama":
+            if self.is_endpoint_available() and self.backend == "ollama":
                 sample = self._generate_via_ollama(spec, idx)
-            elif endpoint_active and self.backend == "vllm":
+            elif self.is_endpoint_available() and self.backend == "vllm":
                 sample = self._generate_via_vllm(spec, idx)
             else:
                 sample = self._generate_mock_sample(spec, idx)
