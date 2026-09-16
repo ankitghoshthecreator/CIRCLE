@@ -33,6 +33,8 @@ class GroqCriticAgent:
             logging.error("Groq client not initialized due to missing API key.")
             return {
                 "stage_id": stage_id,
+                "stage_name": stage_name,
+                "objectives": objectives,
                 "error": "Missing or invalid GROQ_API_KEY",
                 "critique_raw": "Mock Critique: Unable to reach Groq API. Please check GROQ_API_KEY in .env."
             }
@@ -90,6 +92,8 @@ class GroqCriticAgent:
             logging.error(f"Error calling Groq API: {e}")
             return {
                 "stage_id": stage_id,
+                "stage_name": stage_name,
+                "objectives": objectives,
                 "error": str(e),
                 "critique_raw": f"Error generating critique: {e}",
                 "probe_results": probe_results
