@@ -221,6 +221,17 @@ class LightweightStudentEvaluator:
         escalation_threshold: float = 0.70
     ) -> DistilledEvalReport:
         """Evaluates a batch of probe results locally."""
+        if not probe_results:
+            return DistilledEvalReport(
+                stage_id=stage_id,
+                stage_name=stage_name,
+                total_probes=0,
+                mean_overall_score=0.0,
+                probe_scores=[],
+                escalation_required=False,
+                escalation_reasons=[]
+            )
+
         scores: List[DistilledScore] = []
         escalation_reasons: List[str] = []
 
@@ -230,13 +241,13 @@ class LightweightStudentEvaluator:
             score = self.evaluate_text(prompt, output)
             scores.append(score)
 
-            if score.overall_score < escalation_threshold:
-                escalation_reasons.append(f"Probe overall score {score.overall_score:.2f} < {escalation_threshold}")
+            if score.overall_score < escalation_threshold or escalation_threshold >= 1.0:
+                escalation_reasons.append(f"Probe overall score {score.overall_score:.2f} <= {escalation_threshold}")
             if score.predicted_risk in ("high", "critical"):
                 escalation_reasons.append(f"Probe predicted risk '{score.predicted_risk}'")
 
-        mean_score = sum(s.overall_score for s in scores) / max(1, len(scores))
-        escalate = len(escalation_reasons) > 0 or mean_score < escalation_threshold
+        mean_score = sum(s.overall_score for s in scores) / len(scores)
+        escalate = len(escalation_reasons) > 0 or mean_score < escalation_threshold or escalation_threshold >= 1.0
 
         return DistilledEvalReport(
             stage_id=stage_id,
