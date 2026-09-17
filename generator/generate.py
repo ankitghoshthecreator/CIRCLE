@@ -68,7 +68,7 @@ class LocalDataGeneratorEngine:
         request_timeout_sec: float = 10.0
     ):
         self.backend = backend.lower()
-        self.endpoint_url = endpoint_url.rstrip("/")
+        self.endpoint_url = endpoint_url.strip().rstrip("/")
         self.model_name = model_name
         self.request_timeout_sec = request_timeout_sec
         self._endpoint_checked = False
