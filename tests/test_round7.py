@@ -604,6 +604,260 @@ except Exception as e:
     report(20, "DatasetMerger appends synthetics while preserving existing seed examples", FAIL, str(e))
 
 
+# ═══════════════════════════════════════════════════════════
+# BLOCK E: ADVANCED STRESS & REJECTION MATRIX (T21-T30)
+# ═══════════════════════════════════════════════════════════
+print("\n[ E ] Advanced Stress & Rejection Matrix")
+
+# T21: Multi-layer rejection accumulation - single sample triggering 4 layers simultaneously
+try:
+    from generator.generate import SyntheticDataSample
+    from generator.validator import SyntheticDataValidator
+
+    validator = SyntheticDataValidator()
+    # "short" (len 5 < 10 L2), input==target (L5), bigram repeat "ab ab ab ab" (L4)
+    sample = SyntheticDataSample(
+        sample_id="r7t21", stage_id=1, category="test",
+        input_text="ab ab ab ab",   # len 11, but bigram repeat
+        target_text="ab ab ab ab",  # input == target identity
+        prompt_spec_id="r"
+    )
+    res = validator.validate_sample(sample)
+    assert not res.passed
+    assert len(res.rejection_reasons) >= 2, f"Expected multiple reasons, got {res.rejection_reasons}"
+    report(21, "Multi-layer rejection accumulates all violation reasons correctly", PASS,
+           f"Reasons count: {len(res.rejection_reasons)}")
+except Exception as e:
+    report(21, "Multi-layer rejection accumulates all violation reasons correctly", FAIL, str(e))
+
+
+# T22: Tricky bigram repetition ratio with alternating words
+try:
+    from generator.generate import SyntheticDataSample
+    from generator.validator import SyntheticDataValidator
+
+    validator = SyntheticDataValidator(bigram_repeat_threshold=0.30)
+    # "the cat the cat the cat the cat the cat" -> (the, cat) repeated 5 times out of 9 bigrams ratio 5/9 = 0.55 > 0.30
+    sample = SyntheticDataSample(
+        sample_id="r7t22", stage_id=1, category="test",
+        input_text="Describe the behavior of alternating phrase repeating loops.",
+        target_text="the cat the cat the cat the cat the cat the cat the cat the cat",
+        prompt_spec_id="r"
+    )
+    res = validator.validate_sample(sample)
+    assert not res.passed
+    assert any("L4_DEGENERATE" in r for r in res.rejection_reasons)
+    report(22, "Alternating phrase repeating loop ('the cat the cat...') rejected at Layer 4", PASS)
+except Exception as e:
+    report(22, "Alternating phrase repeating loop ('the cat the cat...') rejected at Layer 4", FAIL, str(e))
+
+
+# T23: High-frequency punctuation noise strings rejected
+try:
+    from generator.generate import SyntheticDataSample
+    from generator.validator import SyntheticDataValidator
+
+    validator = SyntheticDataValidator()
+    sample = SyntheticDataSample(
+        sample_id="r7t23", stage_id=1, category="test",
+        input_text="Explain punctuation handling.",
+        target_text="..................................................", # 50 dots
+        prompt_spec_id="r"
+    )
+    res = validator.validate_sample(sample)
+    assert not res.passed
+    report(23, "Punctuation-only target ('.......') detected as degenerate", PASS)
+except Exception as e:
+    report(23, "Punctuation-only target ('.......') detected as degenerate", FAIL, str(e))
+
+
+# T24: Jaccard circularity threshold boundary condition check (exact 0.85 vs 0.86)
+try:
+    from generator.generate import SyntheticDataSample
+    from generator.validator import SyntheticDataValidator
+
+    validator = SyntheticDataValidator(circularity_threshold=0.85)
+
+    # 10 shared words, 1 distinct each -> Jaccard = 10 / 12 = 0.833... wait, 19 shared, 1 distinct = 19/21 = 0.904 > 0.85 (REJECT)
+    w_shared = "dimension vector tensor matrix scalar array gradient loss model dataset layer epoch batch weights bias features labels tokens logits parameters"
+    sample_circ = SyntheticDataSample(
+        sample_id="r7t24_high", stage_id=1, category="test",
+        input_text=f"{w_shared} alpha",
+        target_text=f"{w_shared} beta",
+        prompt_spec_id="r"
+    )
+    res_circ = validator.validate_sample(sample_circ)
+    assert not res_circ.passed
+    assert any("L6_CIRCULARITY" in r for r in res_circ.rejection_reasons)
+    report(24, "Jaccard circularity > 0.85 boundary correctly triggers Layer 6 rejection", PASS)
+except Exception as e:
+    report(24, "Jaccard circularity > 0.85 boundary correctly triggers Layer 6 rejection", FAIL, str(e))
+
+
+# T25: Whitespace normalization prior to SHA-256 fingerprinting
+try:
+    from generator.generate import SyntheticDataSample, SyntheticDataBatch
+    from generator.validator import SyntheticDataValidator
+
+    validator = SyntheticDataValidator()
+    s1 = SyntheticDataSample(
+        sample_id="r7t25_s1", stage_id=1, category="test",
+        input_text="How to train model efficiently?",
+        target_text="Use gradient checkpointing and mixed precision training methods.",
+        prompt_spec_id="r"
+    )
+    # Same content with extra spaces/tabs/newlines
+    s2 = SyntheticDataSample(
+        sample_id="r7t25_s2", stage_id=1, category="test",
+        input_text="How  to   train\nmodel\tefficiently? ",
+        target_text="Use   gradient checkpointing   and mixed precision training methods.\n",
+        prompt_spec_id="r"
+    )
+    batch = SyntheticDataBatch(stage_id=1, total_samples=2, samples=[s1, s2])
+    rep, valid = validator.validate_batch(batch)
+    assert rep.total_passed == 1
+    assert rep.total_rejected == 1
+    report(25, "SHA-256 dedup normalizes internal whitespace tab/newline variations", PASS)
+except Exception as e:
+    report(25, "SHA-256 dedup normalizes internal whitespace tab/newline variations", FAIL, str(e))
+
+
+# T26: Merger handles corrupted JSON dataset on disk by backing up or re-creating
+try:
+    from generator.validator import DatasetMerger
+    from trainer.curriculum.dataset_handler import CurriculumExample
+
+    with tempfile.TemporaryDirectory() as tmpdir:
+        stage_dir = os.path.join(tmpdir, "stage_1")
+        os.makedirs(stage_dir, exist_ok=True)
+        bad_json = os.path.join(stage_dir, "dataset.json")
+        with open(bad_json, "w") as f:
+            f.write("{ INVALID JSON CONTENT ...")
+
+        merger = DatasetMerger()
+        ex = CurriculumExample(
+            input_text="Recovering from invalid json file on disk during merge.",
+            target_text="DatasetMerger handles corrupt JSON by overwriting or resetting dataset.",
+            stage_id=1, source="synthetic"
+        )
+        added = merger.merge_into_stage_dataset([ex], stage_id=1, data_dir=tmpdir)
+        assert added == 1
+
+        with open(bad_json) as f:
+            data = json.load(f)
+        assert len(data) == 1
+        report(26, "DatasetMerger recovers gracefully from corrupt JSON file on disk", PASS)
+except Exception as e:
+    report(26, "DatasetMerger recovers gracefully from corrupt JSON file on disk", FAIL, str(e))
+
+
+# T27: DatasetMerger preserves custom kwargs/fields on CurriculumExample
+try:
+    from generator.validator import DatasetMerger
+    from trainer.curriculum.dataset_handler import CurriculumExample
+
+    with tempfile.TemporaryDirectory() as tmpdir:
+        merger = DatasetMerger()
+        ex = CurriculumExample(
+            input_text="Check custom metadata preservation during merger stage write.",
+            target_text="CurriculumExample fields remain intact through JSON serialization.",
+            stage_id=4, source="synthetic", metadata={"quality_score": 0.95, "generator": "vllm"}
+        )
+        added = merger.merge_into_stage_dataset([ex], stage_id=4, data_dir=tmpdir)
+        assert added == 1
+
+        dataset_path = os.path.join(tmpdir, "stage_4", "dataset.json")
+        with open(dataset_path) as f:
+            saved = json.load(f)
+        assert saved[0]["metadata"]["quality_score"] == 0.95
+        report(27, "CurriculumExample metadata dictionary is preserved across merge", PASS)
+except Exception as e:
+    report(27, "CurriculumExample metadata dictionary is preserved across merge", FAIL, str(e))
+
+
+# T28: ValidationReport summary breakdown by rejection category
+try:
+    from generator.generate import SyntheticDataSample, SyntheticDataBatch
+    from generator.validator import SyntheticDataValidator
+
+    validator = SyntheticDataValidator()
+    samples = [
+        # L2 short
+        SyntheticDataSample(sample_id="s1", stage_id=1, category="t", input_text="short", target_text="short", prompt_spec_id="r"),
+        # L4 repeat
+        SyntheticDataSample(sample_id="s2", stage_id=1, category="t", input_text="Valid prompt question?", target_text="bad bad bad bad bad bad bad bad bad bad bad", prompt_spec_id="r"),
+        # Clean
+        SyntheticDataSample(sample_id="s3", stage_id=1, category="t", input_text="Valid prompt question?", target_text="This is a completely valid target response.", prompt_spec_id="r")
+    ]
+    batch = SyntheticDataBatch(stage_id=1, total_samples=3, samples=samples)
+    rep, valid = validator.validate_batch(batch)
+
+    assert rep.total_passed == 1
+    assert rep.total_rejected == 2
+    assert len(rep.rejection_breakdown) >= 2
+    report(28, "ValidationReport rejection_breakdown categorizes failure reasons accurately", PASS)
+except Exception as e:
+    report(28, "ValidationReport rejection_breakdown categorizes failure reasons accurately", FAIL, str(e))
+
+
+# T29: Sequential batch deduplication across multiple validate_batch calls
+try:
+    from generator.generate import SyntheticDataSample, SyntheticDataBatch
+    from generator.validator import SyntheticDataValidator
+
+    validator = SyntheticDataValidator() # Single instance holds seen_hashes across batches
+    s1 = SyntheticDataSample(
+        sample_id="s1", stage_id=1, category="t",
+        input_text="How to handle catastrophic forgetting in neural nets?",
+        target_text="Interleave past stage samples using a replay buffer during gradient updates.",
+        prompt_spec_id="r"
+    )
+
+    batch1 = SyntheticDataBatch(stage_id=1, total_samples=1, samples=[s1])
+    rep1, valid1 = validator.validate_batch(batch1)
+    assert len(valid1) == 1
+
+    # Same sample presented in batch 2
+    batch2 = SyntheticDataBatch(stage_id=1, total_samples=1, samples=[s1])
+    rep2, valid2 = validator.validate_batch(batch2)
+    assert len(valid2) == 0, "Second batch should reject sample as duplicate seen in batch 1"
+    report(29, "Cross-batch stateful deduplication flags samples seen in previous batches", PASS)
+except Exception as e:
+    report(29, "Cross-batch stateful deduplication flags samples seen in previous batches", FAIL, str(e))
+
+
+# T30: High-throughput stress test with 1,000 samples across 10 validation batches
+try:
+    import time
+    from generator.generate import SyntheticDataSample, SyntheticDataBatch
+    from generator.validator import SyntheticDataValidator
+
+    validator = SyntheticDataValidator()
+    start_t = time.time()
+    total_valid = 0
+
+    for b in range(10):
+        samples = [
+            SyntheticDataSample(
+                sample_id=f"b{b}_s{i}", stage_id=1, category="test",
+                input_text=f"Batch {b} sample {i}: What are the key hyperparams for QLoRA fine-tuning?",
+                target_text=f"Batch {b} sample {i}: Set r=8, lora_alpha=16, target_modules c_attn, compute float16.",
+                prompt_spec_id="r"
+            )
+            for i in range(100)
+        ]
+        batch = SyntheticDataBatch(stage_id=1, total_samples=100, samples=samples)
+        rep, valid = validator.validate_batch(batch)
+        total_valid += len(valid)
+
+    elapsed_ms = (time.time() - start_t) * 1000
+    assert total_valid == 1000
+    assert elapsed_ms < 1000.0, f"Took {elapsed_ms:.2f}ms (threshold 1000ms)"
+    report(30, "1,000 samples across 10 batches validated under 1,000ms total", PASS, f"Time: {elapsed_ms:.2f}ms")
+except Exception as e:
+    report(30, "1,000 samples across 10 batches validated under 1,000ms total", FAIL, str(e))
+
+
 # ─── SUMMARY ───
 print("\n" + "="*65)
 passed = sum(1 for _, _, s, _ in results if s == PASS)

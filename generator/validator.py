@@ -56,6 +56,10 @@ class ValidationReport(BaseModel):
     total_rejected: int = Field(..., description="Samples rejected by at least one gate")
     pass_rate: float = Field(..., ge=0.0, le=1.0, description="Fraction of samples passed")
     results: List[ValidationResult] = Field(default_factory=list)
+    rejection_breakdown: dict = Field(
+        default_factory=dict,
+        description="Count of rejections per layer category"
+    )
     validated_at: str = Field(default_factory=lambda: datetime.utcnow().isoformat())
 
     model_config = {"use_enum_values": True}
@@ -100,6 +104,11 @@ class SyntheticDataValidator:
         self.max_length = max_length
         self.bigram_repeat_threshold = bigram_repeat_threshold
         self.circularity_threshold = circularity_threshold
+        self.seen_hashes: set = set()
+
+    def reset_state(self):
+        """Resets in-memory seen hashes across batches."""
+        self.seen_hashes.clear()
 
     # ── Public API ────────────────────────────────────────────
 
@@ -111,18 +120,22 @@ class SyntheticDataValidator:
             report          : ValidationReport with per-sample outcomes
             valid_examples  : List[CurriculumExample] of all passed samples, ready for merger
         """
-        seen_hashes: set = set()
         results: List[ValidationResult] = []
         valid_examples: List[CurriculumExample] = []
+        breakdown: dict = {}
 
         for sample in batch.samples:
-            result = self._validate_sample(sample, seen_hashes)
+            result = self._validate_sample(sample, self.seen_hashes)
             results.append(result)
             if result.passed:
                 # Register hash so subsequent identical samples are deduped
                 h = _content_hash(sample.input_text, sample.target_text)
-                seen_hashes.add(h)
+                self.seen_hashes.add(h)
                 valid_examples.append(_to_curriculum_example(sample))
+            else:
+                for reason in result.rejection_reasons:
+                    cat = reason.split(":")[0] if ":" in reason else "UNKNOWN"
+                    breakdown[cat] = breakdown.get(cat, 0) + 1
 
         total_input = len(results)
         total_passed = sum(1 for r in results if r.passed)
@@ -136,6 +149,7 @@ class SyntheticDataValidator:
             total_rejected=total_rejected,
             pass_rate=pass_rate,
             results=results,
+            rejection_breakdown=breakdown,
         )
 
         logger.info(
@@ -195,12 +209,14 @@ class SyntheticDataValidator:
             reasons.append(f"L3_MAX_LEN: target_text too long ({len(tgt)} > {self.max_length} chars)")
             penalty += 0.2
 
-        # Layer 4 – Degenerate Repetition (applied to target_text)
+        # Layer 4 – Degenerate Repetition & Punctuation Noise (applied to target_text)
         rep_ratio = _bigram_repeat_ratio(tgt)
-        if rep_ratio > self.bigram_repeat_threshold:
+        is_punct_only = bool(re.match(r"^[\s\W_]+$", tgt))
+        if rep_ratio > self.bigram_repeat_threshold or is_punct_only:
             reasons.append(
                 f"L4_DEGENERATE_REPETITION: target bigram repeat ratio {rep_ratio:.2f} "
-                f"> threshold {self.bigram_repeat_threshold}"
+                f"> threshold {self.bigram_repeat_threshold}" if not is_punct_only else
+                "L4_DEGENERATE_REPETITION: target_text contains punctuation noise only"
             )
             penalty += 0.4
 
@@ -262,8 +278,12 @@ class DatasetMerger:
             logger.info(f"[Merger] No validated examples to merge for Stage {stage_id}.")
             return 0
 
-        # Load existing dataset (returns empty list if none exists)
-        existing = load_stage_dataset(stage_id, data_dir=data_dir, use_seed_fallback=False)
+        # Load existing dataset (returns empty list if none exists or if JSON is corrupt)
+        try:
+            existing = load_stage_dataset(stage_id, data_dir=data_dir, use_seed_fallback=False)
+        except Exception as err:
+            logger.warning(f"[Merger] Stage {stage_id} dataset.json is corrupt ({err}). Resetting dataset.")
+            existing = []
 
         # Build existing fingerprint set
         existing_hashes = {
@@ -299,7 +319,9 @@ class DatasetMerger:
 
 def _content_hash(input_text: str, target_text: str) -> str:
     """Returns a SHA-256 hex digest of the normalised (input, target) pair."""
-    combined = f"{input_text.strip().lower()}|||{target_text.strip().lower()}"
+    norm_inp = " ".join(input_text.strip().lower().split())
+    norm_tgt = " ".join(target_text.strip().lower().split())
+    combined = f"{norm_inp}|||{norm_tgt}"
     return hashlib.sha256(combined.encode("utf-8")).hexdigest()
 
 
