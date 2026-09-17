@@ -286,3 +286,42 @@ Failed samples are reported with structured `ValidationResult` objects carrying 
   where $N$ = number of samples and $L$ = average text length (hashing is linear in input size).
 - **Outcome**: Processes 500 samples in **<9ms** total with zero cross-sample fingerprint collisions, preventing replay buffer contamination from duplicated generation runs.
 
+---
+
+## 3. Round 7 Stress & Edge-Case Test Suite Results (30/30 PASSED)
+
+The table below documents the empirical test results across all 30 difficult stress, boundary condition, and edge-case tests in [`tests/test_round7.py`](file:///d:/CIRCLE/tests/test_round7.py):
+
+| Test ID | Test Category | Target Behavior / Condition Tested | Result | Verification Detail |
+| :--- | :--- | :--- | :---: | :--- |
+| **T01** | Boundary & Sanitization | 100,000-char `input_text` payload | **PASS** | Validated under `max_length=200k` without memory leak |
+| **T02** | Boundary & Sanitization | `input_text` exceeding 4,096 max limit | **PASS** | Rejected cleanly at Layer 3 (`L3_MAX_LEN`) |
+| **T03** | Boundary & Sanitization | All-whitespace input string | **PASS** | Rejected at Layer 1 (`L1_SCHEMA`) after `.strip()` |
+| **T04** | Boundary & Sanitization | Single word repetition (`"train train..."`) | **PASS** | Flagged at Layer 4 (`L4_DEGENERATE_REPETITION`) |
+| **T05** | Boundary & Sanitization | Emoji-only text strings | **PASS** | Flagged by Layer 2 min length & punctuation noise check |
+| **T06** | Boundary & Sanitization | Case-insensitive identity (`UPPER == lower`) | **PASS** | Rejected at Layer 5 (`L5_IDENTITY`) |
+| **T07** | Boundary & Sanitization | 0-passing sample batch execution | **PASS** | Returns clean `ValidationReport` with `pass_rate=0.0` |
+| **T08** | Dedup & Merger | Case-insensitive SHA-256 deduplication | **PASS** | Upper and lower case duplicates trigger `L7_DUPLICATE` |
+| **T09** | Dedup & Merger | `DatasetMerger` idempotency check | **PASS** | Double-merge adds 0 net-new samples (`+4`, then `+0`) |
+| **T10** | Dedup & Merger | 0-example merge request | **PASS** | Returns 0 added without creating empty disk files |
+| **T11** | Dedup & Merger | 30-cycle report JSON serialization | **PASS** | Values preserved with zero floating point drift |
+| **T12** | Performance & Scale | 500-sample batch validation benchmark | **PASS** | Evaluates in **<150ms** total (~0.28ms/sample) |
+| **T13** | Performance & Scale | 10-thread parallel executor concurrency | **PASS** | Thread-safe validation without state race conditions |
+| **T14** | Performance & Scale | Composite `quality_score` calculation | **PASS** | Score = 1.0 for clean sample, <1.0 for partial fails |
+| **T15** | Pipeline Integration | Full 6-Stage Pipeline execution | **PASS** | Critique $\rightarrow$ Parser $\rightarrow$ Writer $\rightarrow$ Generator $\rightarrow$ Validator $\rightarrow$ Merger |
+| **T16** | Pipeline Integration | Pydantic report JSON roundtrip | **PASS** | 100% JSON-serializable schema compliance |
+| **T17** | Pipeline Integration | Semantic circularity (shuffled vocabulary) | **PASS** | Flagged at Layer 6 (`L6_CIRCULARITY`, Jaccard=1.00) |
+| **T18** | Pipeline Integration | Custom validator thresholds (`min=50, max=200`) | **PASS** | Per-instance threshold parameters respected |
+| **T19** | Pipeline Integration | 100% pass rate calculation | **PASS** | `pass_rate = 1.0` computed when all 10 samples pass |
+| **T20** | Pipeline Integration | Seed dataset preservation during merge | **PASS** | Appends synthetics while preserving existing seed samples |
+| **T21** | Advanced Matrix | Multi-layer rejection accumulation | **PASS** | Sample violating multiple layers reports all reasons |
+| **T22** | Advanced Matrix | Alternating phrase loop (`"the cat the cat..."`) | **PASS** | Flagged at Layer 4 bigram repetition check |
+| **T23** | Advanced Matrix | High-frequency punctuation noise (`"........"`) | **PASS** | Detected as non-word noise at Layer 4 |
+| **T24** | Advanced Matrix | Jaccard circularity $>0.85$ boundary | **PASS** | Triggers Layer 6 rejection at 0.90 Jaccard overlap |
+| **T25** | Advanced Matrix | Whitespace tab/newline SHA-256 dedup | **PASS** | Hashes normalize internal `\t` and `\n` whitespace |
+| **T26** | Advanced Matrix | Graceful recovery from corrupt JSON file | **PASS** | Logs warning and resets corrupt disk dataset cleanly |
+| **T27** | Advanced Matrix | Metadata dictionary field preservation | **PASS** | Custom fields (`quality_score`, `generator`) preserved |
+| **T28** | Advanced Matrix | `ValidationReport.rejection_breakdown` | **PASS** | Accurately aggregates failure counts by category |
+| **T29** | Advanced Matrix | Stateful cross-batch deduplication | **PASS** | `seen_hashes` persist across sequential batch calls |
+| **T30** | Advanced Matrix | 1,000-sample high-throughput stress test | **PASS** | Validates 1,000 samples across 10 batches in **<250ms** |
+
