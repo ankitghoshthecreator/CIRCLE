@@ -426,3 +426,32 @@ Any `ImportError` for a package in `_CONTAINER_ONLY_PKGS` is silently passed; an
 - **Environment Agnostic Testing**: Tests pass identically on CPU-only dev machines, CI runners, and inside GPU containers without conditional test skipping.
 - **Strict Boundary**: Only explicitly-allowlisted GPU/cloud packages are bypassed — all application-layer modules (`eval.*`, `generator.*`, `docker.*`, `trainer.*`) still trigger test failure if they have circular imports or missing module wiring.
 
+---
+
+## 5. Round 9 Stress & Edge-Case Test Suite Results (20/20 PASSED)
+
+The table below documents the empirical test results across all 20 hard-mode stress, boundary condition, and edge-case tests in [`tests/test_round9.py`](file:///d:/CIRCLE/tests/test_round9.py):
+
+| Test ID | Test Category | Target Behavior / Condition Tested | Result | Verification Detail |
+| :--- | :--- | :--- | :---: | :--- |
+| **T01** | WORKDIR Correctness | Runner stage WORKDIR is `/app` across all 4 Dockerfiles | **PASS** | Verified `AS runner` section contains `WORKDIR /app` (not `/build`) |
+| **T02** | WORKDIR Correctness | Builder stage WORKDIR is `/build` across all 4 Dockerfiles | **PASS** | Verified `AS builder` section contains `WORKDIR /build` (isolated from runtime) |
+| **T03** | Base Image Pinning | All FROM lines use `python:3.10-slim` (no 3.9 or 3.11 drift) | **PASS** | All 8 FROM instructions (4 builder + 4 runner) pin to `python:3.10-slim` |
+| **T04** | Cross-Module COPY | `generator.Dockerfile` copies `trainer/curriculum/` for DatasetSpec schema | **PASS** | `COPY trainer/curriculum/` present in generator build context |
+| **T05** | Healthcheck Grace | All Dockerfiles' HEALTHCHECK includes `--start-period` (cold-start window) | **PASS** | All 4 Dockerfiles include `--start-period=` parameter |
+| **T06** | Compose Env Injection | Trainer service injects `STAGE_ID` for curriculum loop stage tracking | **PASS** | `STAGE_ID=1` present in trainer environment |
+| **T07** | Compose Env Safety | Evaluator `GROQ_API_KEY` has shell-default fallback (`:-mock_key`) | **PASS** | Shell substitution default `${GROQ_API_KEY:-mock_key}` prevents crash on missing key |
+| **T08** | Compose Env Safety | Generator `OLLAMA_ENDPOINT_URL` has shell-default fallback | **PASS** | Shell substitution `${OLLAMA_ENDPOINT_URL:-http://localhost:11434}` ensures offline safety |
+| **T09** | Compose Env Safety | Orchestrator injects `KUBERNETES_SERVICE_HOST` for in-cluster detection | **PASS** | `${KUBERNETES_SERVICE_HOST:-}` allows local no-op while k8s injects real value in-cluster |
+| **T10** | Volume Completeness | Trainer mounts both `circle-data` AND `circle-checkpoints` | **PASS** | Both volumes present in trainer service `volumes` spec |
+| **T11** | Volume Completeness | Orchestrator mounts all 3 volumes: data, checkpoints, logs | **PASS** | All 3 volumes present — required for full read/write of training artifacts |
+| **T12** | Compose Uniqueness | No duplicate `container_name` values across all services | **PASS** | All 4 container names unique: `circle-{trainer,evaluator,generator,orchestrator}` |
+| **T13** | Dependency Chain | Generator `depends_on` evaluator (data validation ordering enforced) | **PASS** | Generator will not start until evaluator is up — prevents validation schema miss |
+| **T14** | Build Context | All compose services `build.context` set to `..` (project root) | **PASS** | Verified across all 4 services — prevents COPY path failures from docker/ subdirectory |
+| **T15** | API Return Type | `build_image()` returns `bool True` on dry-run (not `None` or int) | **PASS** | `isinstance(result, bool)` assertion verified |
+| **T16** | API Error Return | `build_image()` returns `bool False` for missing Dockerfile (not raises) | **PASS** | Graceful `False` return validated for `ghost` service with non-existent Dockerfile |
+| **T17** | API Return Type | `run_container_healthcheck()` returns `bool True` on dry-run | **PASS** | Type-safe return verified — consistent with `build_image()` API contract |
+| **T18** | API Surface | `build_images.py` exposes callable `main()` entry point | **PASS** | `callable(bm.main)` confirmed — required for CLI subprocess invocation |
+| **T19** | API Signature | `inspect_image_size()` has single `(tag: str)` parameter | **PASS** | `inspect.signature` confirms exactly 1 parameter named `tag` |
+| **T20** | Cross-Platform Safety | All `SERVICES` dockerfile paths use forward slashes (no backslash) | **PASS** | All 4 paths use `docker/<name>.Dockerfile` format — safe on Linux CI and Windows |
+
