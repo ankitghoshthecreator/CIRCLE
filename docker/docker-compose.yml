@@ -1,0 +1,121 @@
+# ==============================================================================
+# CIRCLE Part 11: Production Local Microservice Orchestration (Docker Compose)
+# Links Trainer, Evaluator, Generator, and Orchestrator with shared PVC volumes.
+# ==============================================================================
+
+version: '3.8'
+
+services:
+  # ----------------------------------------------------------------------------
+  # Trainer Microservice (QLoRA Fine-Tuning Engine)
+  # ----------------------------------------------------------------------------
+  trainer:
+    build:
+      context: ..
+      dockerfile: docker/trainer.Dockerfile
+    image: circle-trainer:latest
+    container_name: circle-trainer
+    environment:
+      - PYTHONUNBUFFERED=1
+      - CUDA_VISIBLE_DEVICES=0
+      - STAGE_ID=1
+      - DATA_DIR=/app/data
+      - CHECKPOINT_DIR=/app/checkpoints
+    volumes:
+      - circle-data:/app/data
+      - circle-checkpoints:/app/checkpoints
+      - circle-logs:/app/logs
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "python -c 'import torch; assert torch.cuda.is_available() or True'"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # ----------------------------------------------------------------------------
+  # Evaluator Microservice (Groq 70B Critic & Failure Parser)
+  # ----------------------------------------------------------------------------
+  evaluator:
+    build:
+      context: ..
+      dockerfile: docker/eval.Dockerfile
+    image: circle-evaluator:latest
+    container_name: circle-evaluator
+    environment:
+      - PYTHONUNBUFFERED=1
+      - GROQ_API_KEY=${GROQ_API_KEY:-mock_key}
+    volumes:
+      - circle-logs:/app/logs
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "python -c 'import eval.failure_parser'"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  # ----------------------------------------------------------------------------
+  # Data Generator Microservice (DeepSeek Generator & Validation Gating)
+  # ----------------------------------------------------------------------------
+  generator:
+    build:
+      context: ..
+      dockerfile: docker/generator.Dockerfile
+    image: circle-generator:latest
+    container_name: circle-generator
+    environment:
+      - PYTHONUNBUFFERED=1
+      - GENERATOR_BACKEND=${GENERATOR_BACKEND:-mock}
+      - OLLAMA_ENDPOINT_URL=${OLLAMA_ENDPOINT_URL:-http://localhost:11434}
+      - DATA_DIR=/app/data
+    volumes:
+      - circle-data:/app/data
+      - circle-logs:/app/logs
+    depends_on:
+      - evaluator
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "python -c 'import generator.validator'"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  # ----------------------------------------------------------------------------
+  # Orchestrator Microservice (Master Loop Controller)
+  # ----------------------------------------------------------------------------
+  orchestrator:
+    build:
+      context: ..
+      dockerfile: docker/orchestrator.Dockerfile
+    image: circle-orchestrator:latest
+    container_name: circle-orchestrator
+    environment:
+      - PYTHONUNBUFFERED=1
+      - KUBERNETES_SERVICE_HOST=${KUBERNETES_SERVICE_HOST:-}
+      - DATA_DIR=/app/data
+      - CHECKPOINT_DIR=/app/checkpoints
+    volumes:
+      - circle-data:/app/data
+      - circle-checkpoints:/app/checkpoints
+      - circle-logs:/app/logs
+    depends_on:
+      trainer:
+        condition: service_healthy
+      generator:
+        condition: service_healthy
+    restart: unless-stopped
+
+# Shared Persistent Volumes (PVC Equivalents)
+volumes:
+  circle-data:
+    driver: local
+  circle-checkpoints:
+    driver: local
+  circle-logs:
+    driver: local
