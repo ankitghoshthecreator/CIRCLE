@@ -455,3 +455,28 @@ The table below documents the empirical test results across all 20 hard-mode str
 | **T19** | API Signature | `inspect_image_size()` has single `(tag: str)` parameter | **PASS** | `inspect.signature` confirms exactly 1 parameter named `tag` |
 | **T20** | Cross-Platform Safety | All `SERVICES` dockerfile paths use forward slashes (no backslash) | **PASS** | All 4 paths use `docker/<name>.Dockerfile` format — safe on Linux CI and Windows |
 
+---
+
+## 6. Round 10 Stress & Edge-Case Test Suite Results (15/15 PASSED)
+
+The table below documents the empirical test results across all 15 hard-mode stress, boundary condition, and edge-case tests in [`tests/test_round10.py`](file:///d:/CIRCLE/tests/test_round10.py):
+
+| Test ID | Test Category | Target Behavior / Condition Tested | Result | Verification Detail |
+| :--- | :--- | :--- | :---: | :--- |
+| **T01** | Punctuation Evaluation | Terminal punctuation score bounds validation | **PASS** | `terminal_punctuation` scores 1.0 for valid endings (`. ! ?`) and <1.0 for unpunctuated text |
+| **T02** | Quote Integrity | Odd/unbalanced quotation mark detection | **PASS** | `quote_balance` rule flags odd quote count and returns score <= 0.3 |
+| **T03** | Dialogue Turn Adherence | `User:` speaker turn hijacking detection | **PASS** | `speaker_turn_adherence` flags prompt override and penalizes score |
+| **T04** | Vocabulary Diversity | Low-diversity repetitive vocabulary looping detection | **PASS** | `no_repetitive_looping` flags repetitive text loops and returns score <= 0.2 |
+| **T05** | Advance Threshold Safety | `advance_threshold_met` false on unachievable target scores | **PASS** | Target score > 1.0 sets `advance_threshold_met=False` |
+| **T06** | Report ISO Timestamp | `ProbeExecutionReport` ISO timestamp formatting | **PASS** | ISO `YYYY-MM-DDTHH:MM:SS` format verified in generated report |
+| **T07** | Report Summary Mapping | `summary_by_rule` key set alignment | **PASS** | `summary_by_rule` keys strictly match all unique rule names across detailed probe results |
+| **T08** | Score Bound Enforcement | `RuleScoreDetail` score range `[0.0, 1.0]` invariant | **PASS** | All rule scores bounded strictly between 0.0 and 1.0 |
+| **T09** | Dataset Loader Default | `load_stage_dataset` default source field value | **PASS** | All loaded seed dataset items default to `source == "seed"` |
+| **T10** | Config Competence Bounds | `STAGES` target competence score bounds `[0.70, 0.95]` | **PASS** | Competence scores across all 5 stages verified within valid bounds |
+| **T11** | K8s RBAC Permissions | `rbac.yaml` ClusterRole batch/jobs API group access | **PASS** | Verified `batch` apiGroups includes `jobs` resource permissions for orchestrator |
+| **T12** | K8s HPA Scaling Spec | `hpa.yaml` generator scaling replica bounds `[1, 4]` | **PASS** | Scale target `circle-generator` verified with `minReplicas: 1` and `maxReplicas: 4` |
+| **T13** | State Persistence Recovery | `StatePersistenceManager` save/load round-trip fidelity | **PASS** | `PipelineState` serialized to JSON and reloaded with identical values |
+| **T14** | Probe Harness Error | Non-existent stage ID exception handling | **PASS** | Stage ID 99 raises `FileNotFoundError` gracefully |
+| **T15** | Subprocess Execution | `test_part15.py` standalone execution | **PASS** | Subprocess invocation of `test_part15.py` exits with 0 return code |
+
+
