@@ -1,35 +1,38 @@
 # ==============================================================================
-# CIRCLE Part 12: Evaluator Deployment — Groq 70B Critic & Failure Parser
-# Lightweight CPU-only pod. GROQ_API_KEY injected from Secret.
-# Replaces the bare-skeleton eval-deployment.yaml from Part 1.
+# CIRCLE Part 12: Orchestrator Deployment — Master Closed-Loop Controller
+# Uses circle-orchestrator-sa ServiceAccount for RBAC-scoped cluster access.
+# Mounts all 3 PVCs for full read/write access to pipeline artifacts.
 # ==============================================================================
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: circle-evaluator
+  name: circle-orchestrator
   namespace: circle
   labels:
-    app: circle-evaluator
+    app: circle-orchestrator
     project: circle
     part: "12"
-    tier: evaluation
+    tier: orchestration
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: circle-evaluator
+      app: circle-orchestrator
   template:
     metadata:
       labels:
-        app: circle-evaluator
-        tier: evaluation
+        app: circle-orchestrator
+        tier: orchestration
     spec:
       restartPolicy: Always
-      terminationGracePeriodSeconds: 30
+      terminationGracePeriodSeconds: 60
+
+      # ── Use the RBAC ServiceAccount for in-cluster API access ─────────────
+      serviceAccountName: circle-orchestrator-sa
 
       containers:
-        - name: evaluator
-          image: circle-evaluator:v1.1
+        - name: orchestrator
+          image: circle-orchestrator:v1.1
           imagePullPolicy: IfNotPresent
 
           # ── Environment ──────────────────────────────────────────────────
@@ -39,18 +42,30 @@ spec:
             - secretRef:
                 name: circle-secrets
                 optional: true
+          env:
+            # Internal DNS names for other CIRCLE services
+            - name: TRAINER_SERVICE_URL
+              value: "http://circle-trainer-svc:8080"
+            - name: EVALUATOR_SERVICE_URL
+              value: "http://circle-evaluator-svc:8081"
+            - name: GENERATOR_SERVICE_URL
+              value: "http://circle-generator-svc:8082"
 
           # ── Resource Requests & Limits ───────────────────────────────────
           resources:
             requests:
+              memory: "512Mi"
+              cpu: "250m"
+            limits:
               memory: "1Gi"
               cpu: "500m"
-            limits:
-              memory: "2Gi"
-              cpu: "1"
 
           # ── Volume Mounts ─────────────────────────────────────────────────
           volumeMounts:
+            - name: data-volume
+              mountPath: /app/data
+            - name: checkpoints-volume
+              mountPath: /app/checkpoints
             - name: logs-volume
               mountPath: /app/logs
 
@@ -60,10 +75,10 @@ spec:
               command:
                 - python
                 - -c
-                - "import eval.failure_parser; print('ready')"
-            initialDelaySeconds: 15
-            periodSeconds: 20
-            timeoutSeconds: 8
+                - "import sys; sys.exit(0)"
+            initialDelaySeconds: 10
+            periodSeconds: 15
+            timeoutSeconds: 5
             failureThreshold: 3
 
           livenessProbe:
@@ -72,17 +87,23 @@ spec:
                 - python
                 - -c
                 - "import sys; sys.exit(0)"
-            initialDelaySeconds: 30
+            initialDelaySeconds: 20
             periodSeconds: 30
-            timeoutSeconds: 8
+            timeoutSeconds: 5
             failureThreshold: 5
 
           ports:
-            - containerPort: 8081
-              name: health
+            - containerPort: 8083
+              name: status
               protocol: TCP
 
       volumes:
+        - name: data-volume
+          persistentVolumeClaim:
+            claimName: circle-data-pvc
+        - name: checkpoints-volume
+          persistentVolumeClaim:
+            claimName: circle-checkpoints-pvc
         - name: logs-volume
           persistentVolumeClaim:
             claimName: circle-logs-pvc

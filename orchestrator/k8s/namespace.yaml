@@ -1,0 +1,12 @@
+# ==============================================================================
+# CIRCLE Part 12: Kubernetes Namespace
+# Isolates all CIRCLE resources from other cluster workloads.
+# ==============================================================================
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: circle
+  labels:
+    project: circle
+    part: "12"
+    managed-by: circle-orchestrator

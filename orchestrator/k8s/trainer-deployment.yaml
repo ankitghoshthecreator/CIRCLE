@@ -1,3 +1,8 @@
+# ==============================================================================
+# CIRCLE Part 12: Trainer Deployment — QLoRA Fine-Tuning Engine
+# GPU-accelerated training pod with checkpoint + data volume mounts.
+# Replaces the bare-skeleton trainer-deployment.yaml from Part 1.
+# ==============================================================================
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -5,6 +10,9 @@ metadata:
   namespace: circle
   labels:
     app: circle-trainer
+    project: circle
+    part: "12"
+    tier: training
 spec:
   replicas: 1
   selector:
@@ -14,18 +22,99 @@ spec:
     metadata:
       labels:
         app: circle-trainer
+        tier: training
     spec:
+      # ── Runtime Identity ───────────────────────────────────────────────────
+      restartPolicy: Always
+      terminationGracePeriodSeconds: 120
+
+      # ── Containers ─────────────────────────────────────────────────────────
       containers:
-      - name: trainer
-        image: circle-trainer:latest
-        imagePullPolicy: IfNotPresent
-        envFrom:
-        - secretRef:
-            name: circle-secrets
-            optional: true
-        resources:
-          limits:
-            nvidia.com/gpu: "1"
-            memory: "8Gi"
-          requests:
-            memory: "4Gi"
+        - name: trainer
+          image: circle-trainer:v1.1
+          imagePullPolicy: IfNotPresent
+
+          # ── Environment ──────────────────────────────────────────────────
+          envFrom:
+            - configMapRef:
+                name: circle-config
+            - secretRef:
+                name: circle-secrets
+                optional: true
+          env:
+            - name: CUDA_VISIBLE_DEVICES
+              value: "0"
+
+          # ── Resource Requests & Limits ───────────────────────────────────
+          resources:
+            requests:
+              memory: "6Gi"
+              cpu: "2"
+              nvidia.com/gpu: "1"
+            limits:
+              memory: "12Gi"
+              cpu: "4"
+              nvidia.com/gpu: "1"
+
+          # ── Volume Mounts ─────────────────────────────────────────────────
+          volumeMounts:
+            - name: data-volume
+              mountPath: /app/data
+            - name: checkpoints-volume
+              mountPath: /app/checkpoints
+            - name: logs-volume
+              mountPath: /app/logs
+
+          # ── Health Probes ─────────────────────────────────────────────────
+          # Readiness: pod is ready once Python environment can import torch
+          readinessProbe:
+            exec:
+              command:
+                - python
+                - -c
+                - "import torch; print('ready')"
+            initialDelaySeconds: 30
+            periodSeconds: 30
+            timeoutSeconds: 10
+            successThreshold: 1
+            failureThreshold: 3
+
+          # Liveness: pod stays alive as long as Python is healthy
+          livenessProbe:
+            exec:
+              command:
+                - python
+                - -c
+                - "import sys; sys.exit(0)"
+            initialDelaySeconds: 60
+            periodSeconds: 60
+            timeoutSeconds: 10
+            failureThreshold: 5
+
+          # ── Ports ─────────────────────────────────────────────────────────
+          ports:
+            - containerPort: 8080
+              name: health
+              protocol: TCP
+
+      # ── Volumes ────────────────────────────────────────────────────────────
+      volumes:
+        - name: data-volume
+          persistentVolumeClaim:
+            claimName: circle-data-pvc
+        - name: checkpoints-volume
+          persistentVolumeClaim:
+            claimName: circle-checkpoints-pvc
+        - name: logs-volume
+          persistentVolumeClaim:
+            claimName: circle-logs-pvc
+
+      # ── Node Selector: require GPU node ───────────────────────────────────
+      nodeSelector:
+        accelerator: nvidia-gpu
+
+      # ── Tolerations: allow scheduling on GPU-tainted nodes ────────────────
+      tolerations:
+        - key: "nvidia.com/gpu"
+          operator: "Exists"
+          effect: "NoSchedule"

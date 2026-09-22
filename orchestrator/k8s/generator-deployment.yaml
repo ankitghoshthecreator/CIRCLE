@@ -1,3 +1,8 @@
+# ==============================================================================
+# CIRCLE Part 12: Generator Deployment — DeepSeek Synthetic Data Engine
+# CPU pod that calls local Ollama/vLLM or falls back to mock generation.
+# Replaces the bare-skeleton generator-deployment.yaml from Part 1.
+# ==============================================================================
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -5,6 +10,9 @@ metadata:
   namespace: circle
   labels:
     app: circle-generator
+    project: circle
+    part: "12"
+    tier: generation
 spec:
   replicas: 1
   selector:
@@ -14,16 +22,72 @@ spec:
     metadata:
       labels:
         app: circle-generator
+        tier: generation
     spec:
+      restartPolicy: Always
+      terminationGracePeriodSeconds: 60
+
       containers:
-      - name: generator
-        image: circle-generator:latest
-        imagePullPolicy: IfNotPresent
-        envFrom:
-        - secretRef:
-            name: circle-secrets
-            optional: true
-        resources:
-          requests:
-            memory: "4Gi"
-            cpu: "2"
+        - name: generator
+          image: circle-generator:v1.1
+          imagePullPolicy: IfNotPresent
+
+          # ── Environment ──────────────────────────────────────────────────
+          envFrom:
+            - configMapRef:
+                name: circle-config
+            - secretRef:
+                name: circle-secrets
+                optional: true
+
+          # ── Resource Requests & Limits ───────────────────────────────────
+          resources:
+            requests:
+              memory: "2Gi"
+              cpu: "1"
+            limits:
+              memory: "4Gi"
+              cpu: "2"
+
+          # ── Volume Mounts ─────────────────────────────────────────────────
+          volumeMounts:
+            - name: data-volume
+              mountPath: /app/data
+            - name: logs-volume
+              mountPath: /app/logs
+
+          # ── Health Probes ─────────────────────────────────────────────────
+          readinessProbe:
+            exec:
+              command:
+                - python
+                - -c
+                - "import generator.validator; print('ready')"
+            initialDelaySeconds: 15
+            periodSeconds: 20
+            timeoutSeconds: 8
+            failureThreshold: 3
+
+          livenessProbe:
+            exec:
+              command:
+                - python
+                - -c
+                - "import sys; sys.exit(0)"
+            initialDelaySeconds: 30
+            periodSeconds: 30
+            timeoutSeconds: 8
+            failureThreshold: 5
+
+          ports:
+            - containerPort: 8082
+              name: health
+              protocol: TCP
+
+      volumes:
+        - name: data-volume
+          persistentVolumeClaim:
+            claimName: circle-data-pvc
+        - name: logs-volume
+          persistentVolumeClaim:
+            claimName: circle-logs-pvc

@@ -1,0 +1,49 @@
+# ==============================================================================
+# CIRCLE Part 12: ConfigMap — Non-Sensitive Runtime Configuration
+# Carries all environment config shared across microservices.
+# Real API keys go in circle-secrets (secrets.yaml), NOT here.
+# ==============================================================================
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: circle-config
+  namespace: circle
+  labels:
+    project: circle
+    part: "12"
+data:
+  # ── Shared Directory Paths (must match PVC mountPaths) ──────────────────────
+  DATA_DIR: "/app/data"
+  CHECKPOINT_DIR: "/app/checkpoints"
+  LOG_DIR: "/app/logs"
+
+  # ── Curriculum Stage ────────────────────────────────────────────────────────
+  STAGE_ID: "1"
+  MAX_STAGES: "5"
+
+  # ── Generator Backend Configuration ─────────────────────────────────────────
+  GENERATOR_BACKEND: "mock"
+  OLLAMA_ENDPOINT_URL: "http://localhost:11434"
+  GENERATOR_BATCH_SIZE: "20"
+  GENERATOR_MAX_TOKENS: "512"
+
+  # ── Training Hyperparameters ─────────────────────────────────────────────────
+  LORA_RANK: "8"
+  LORA_ALPHA: "16"
+  TRAIN_BATCH_SIZE: "4"
+  GRADIENT_ACCUMULATION_STEPS: "4"
+  LEARNING_RATE: "2e-4"
+  MAX_TRAIN_STEPS: "200"
+  SAVE_STEPS: "50"
+
+  # ── Evaluator Configuration ──────────────────────────────────────────────────
+  GROQ_MODEL: "llama3-70b-8192"
+  MAX_CRITIQUE_TOKENS: "1024"
+
+  # ── Orchestrator Loop Settings ───────────────────────────────────────────────
+  LOOP_MAX_ITERATIONS: "3"
+  STAGE_ADVANCE_THRESHOLD: "0.85"
+
+  # ── Python Runtime ───────────────────────────────────────────────────────────
+  PYTHONUNBUFFERED: "1"
+  PYTHONDONTWRITEBYTECODE: "1"

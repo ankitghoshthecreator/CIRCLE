@@ -1,0 +1,71 @@
+# ==============================================================================
+# CIRCLE Part 12: RBAC — ServiceAccount, Role, RoleBinding
+# Grants the orchestrator pod rights to manage Jobs and watch Deployments
+# within the circle namespace only (principle of least privilege).
+# ==============================================================================
+
+---
+# ── ServiceAccount for the orchestrator pod ────────────────────────────────────
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: circle-orchestrator-sa
+  namespace: circle
+  labels:
+    project: circle
+    part: "12"
+
+---
+# ── Role: permissions scoped strictly to the circle namespace ─────────────────
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: circle-orchestrator-role
+  namespace: circle
+  labels:
+    project: circle
+    part: "12"
+rules:
+  # Watch and manage training Jobs
+  - apiGroups: ["batch"]
+    resources: ["jobs", "jobs/status"]
+    verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+
+  # Watch Deployment readiness (trainer, evaluator, generator)
+  - apiGroups: ["apps"]
+    resources: ["deployments", "deployments/status"]
+    verbs: ["get", "list", "watch", "patch"]
+
+  # Read and watch Pod status and logs
+  - apiGroups: [""]
+    resources: ["pods", "pods/status", "pods/log"]
+    verbs: ["get", "list", "watch"]
+
+  # Read ConfigMaps (for dynamic config reloads)
+  - apiGroups: [""]
+    resources: ["configmaps"]
+    verbs: ["get", "list", "watch"]
+
+  # Update PVC annotations (track dataset version metadata)
+  - apiGroups: [""]
+    resources: ["persistentvolumeclaims"]
+    verbs: ["get", "list", "watch", "patch"]
+
+---
+# ── RoleBinding: bind role to service account ─────────────────────────────────
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: circle-orchestrator-rolebinding
+  namespace: circle
+  labels:
+    project: circle
+    part: "12"
+subjects:
+  - kind: ServiceAccount
+    name: circle-orchestrator-sa
+    namespace: circle
+roleRef:
+  kind: Role
+  name: circle-orchestrator-role
+  apiGroup: rbac.authorization.k8s.io

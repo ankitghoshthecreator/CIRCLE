@@ -1,0 +1,22 @@
+# ==============================================================================
+# CIRCLE Part 12: Orchestrator Service
+# Exposes the orchestrator status endpoint for monitoring dashboards.
+# ==============================================================================
+apiVersion: v1
+kind: Service
+metadata:
+  name: circle-orchestrator-svc
+  namespace: circle
+  labels:
+    app: circle-orchestrator
+    project: circle
+    part: "12"
+spec:
+  selector:
+    app: circle-orchestrator
+  ports:
+    - name: status
+      protocol: TCP
+      port: 8083
+      targetPort: 8083
+  type: ClusterIP

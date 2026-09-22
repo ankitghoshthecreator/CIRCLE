@@ -1,0 +1,58 @@
+# ==============================================================================
+# CIRCLE Part 12: HorizontalPodAutoscaler — Generator Scale-Out
+# Scales generator replicas 1→4 based on CPU utilization.
+# Handles burst demand during synthetic data generation spikes.
+# Requires metrics-server to be installed in the cluster.
+# ==============================================================================
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: circle-generator-hpa
+  namespace: circle
+  labels:
+    app: circle-generator
+    project: circle
+    part: "12"
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: circle-generator
+
+  # ── Replica Bounds ──────────────────────────────────────────────────────────
+  minReplicas: 1
+  maxReplicas: 4
+
+  # ── Scaling Metrics ─────────────────────────────────────────────────────────
+  metrics:
+    # Scale up when average CPU across generator pods exceeds 60%
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 60
+
+    # Scale up when average memory exceeds 75% of limit
+    - type: Resource
+      resource:
+        name: memory
+        target:
+          type: Utilization
+          averageUtilization: 75
+
+  # ── Scale-Down Stabilization ─────────────────────────────────────────────────
+  # Wait 5 minutes before scaling down to prevent thrashing
+  behavior:
+    scaleDown:
+      stabilizationWindowSeconds: 300
+      policies:
+        - type: Replicas
+          value: 1
+          periodSeconds: 120
+    scaleUp:
+      stabilizationWindowSeconds: 30
+      policies:
+        - type: Replicas
+          value: 2
+          periodSeconds: 60

@@ -1,0 +1,62 @@
+# ==============================================================================
+# CIRCLE Part 12: PersistentVolumeClaims
+# Three shared PVCs for dataset storage, checkpoint weights, and run logs.
+# ReadWriteMany allows all pods to access shared data simultaneously.
+# ==============================================================================
+
+---
+# ── Dataset Storage (seed data + validated synthetic batches) ─────────────────
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: circle-data-pvc
+  namespace: circle
+  labels:
+    project: circle
+    part: "12"
+    tier: storage
+spec:
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 10Gi
+  storageClassName: standard
+
+---
+# ── QLoRA Checkpoint Storage (adapter weights per stage) ─────────────────────
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: circle-checkpoints-pvc
+  namespace: circle
+  labels:
+    project: circle
+    part: "12"
+    tier: storage
+spec:
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 20Gi
+  storageClassName: standard
+
+---
+# ── Structured Run Logs (critique outputs, eval reports, loop state) ──────────
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: circle-logs-pvc
+  namespace: circle
+  labels:
+    project: circle
+    part: "12"
+    tier: storage
+spec:
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 5Gi
+  storageClassName: standard

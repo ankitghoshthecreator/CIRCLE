@@ -1,0 +1,22 @@
+# ==============================================================================
+# CIRCLE Part 12: Evaluator Service
+# Exposes evaluator internally for health polling.
+# ==============================================================================
+apiVersion: v1
+kind: Service
+metadata:
+  name: circle-evaluator-svc
+  namespace: circle
+  labels:
+    app: circle-evaluator
+    project: circle
+    part: "12"
+spec:
+  selector:
+    app: circle-evaluator
+  ports:
+    - name: health
+      protocol: TCP
+      port: 8081
+      targetPort: 8081
+  type: ClusterIP

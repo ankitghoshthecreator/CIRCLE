@@ -1,0 +1,22 @@
+# ==============================================================================
+# CIRCLE Part 12: Generator Service
+# Exposes generator internally. HPA scales this deployment (see hpa.yaml).
+# ==============================================================================
+apiVersion: v1
+kind: Service
+metadata:
+  name: circle-generator-svc
+  namespace: circle
+  labels:
+    app: circle-generator
+    project: circle
+    part: "12"
+spec:
+  selector:
+    app: circle-generator
+  ports:
+    - name: health
+      protocol: TCP
+      port: 8082
+      targetPort: 8082
+  type: ClusterIP
