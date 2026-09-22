@@ -1,0 +1,247 @@
+[
+  {
+    "input_text": "Incorrect: She write clean code every day.",
+    "target_text": "Correct: She writes clean code every day.",
+    "stage_id": 3,
+    "source": "seed",
+    "metadata": { "category": "subject_verb_agreement", "difficulty": "easy" }
+  },
+  {
+    "input_text": "Incorrect: The team of software developers are working on the release.",
+    "target_text": "Correct: The team of software developers is working on the release.",
+    "stage_id": 3,
+    "source": "seed",
+    "metadata": { "category": "subject_verb_agreement", "difficulty": "medium" }
+  },
+  {
+    "input_text": "Incorrect: Yesterday, he walk to the store and buys milk.",
+    "target_text": "Correct: Yesterday, he walked to the store and bought milk.",
+    "stage_id": 3,
+    "source": "seed",
+    "metadata": { "category": "tense_consistency", "difficulty": "easy" }
+  },
+  {
+    "input_text": "Incorrect: Neither the manager nor the employees was present at the meeting.",
+    "target_text": "Correct: Neither the manager nor the employees were present at the meeting.",
+    "stage_id": 3,
+    "source": "seed",
+    "metadata": { "category": "subject_verb_agreement", "difficulty": "hard" }
+  },
+  {
+    "input_text": "Incorrect: I didn't see no errors in the execution log.",
+    "target_text": "Correct: I didn't see any errors in the execution log.",
+    "stage_id": 3,
+    "source": "seed",
+    "metadata": { "category": "double_negative", "difficulty": "easy" }
+  },
+  {
+    "input_text": "Incorrect: Each of the students should submit their assignment on time.",
+    "target_text": "Correct: Each of the students should submit his or her assignment on time.",
+    "stage_id": 3,
+    "source": "seed",
+    "metadata": { "category": "pronoun_antecedent", "difficulty": "medium" }
+  },
+  {
+    "input_text": "Incorrect: The dataset contain many interesting samples for training.",
+    "target_text": "Correct: The dataset contains many interesting samples for training.",
+    "stage_id": 3,
+    "source": "seed",
+    "metadata": { "category": "subject_verb_agreement", "difficulty": "easy" }
+  },
+  {
+    "input_text": "Incorrect: If I would have known about the bug, I would fix it immediately.",
+    "target_text": "Correct: If I had known about the bug, I would have fixed it immediately.",
+    "stage_id": 3,
+    "source": "seed",
+    "metadata": { "category": "conditional_tense", "difficulty": "hard" }
+  },
+  {
+    "input_text": "Incorrect: She don't like when tests fail without clear stack traces.",
+    "target_text": "Correct: She doesn't like when tests fail without clear stack traces.",
+    "stage_id": 3,
+    "source": "seed",
+    "metadata": { "category": "subject_verb_agreement", "difficulty": "easy" }
+  },
+  {
+    "input_text": "Incorrect: Walking down the street, the building came into view.",
+    "target_text": "Correct: Walking down the street, I saw the building come into view.",
+    "stage_id": 3,
+    "source": "seed",
+    "metadata": { "category": "dangling_modifier", "difficulty": "hard" }
+  },
+  {
+    "input_text": "Incorrect: The loss curves shows a continuous decay over epochs.",
+    "target_text": "Correct: The loss curves show a continuous decay over epochs.",
+    "stage_id": 3,
+    "source": "seed",
+    "metadata": { "category": "subject_verb_agreement", "difficulty": "easy" }
+  },
+  {
+    "input_text": "Incorrect: He run ten miles every morning before breakfast.",
+    "target_text": "Correct: He runs ten miles every morning before breakfast.",
+    "stage_id": 3,
+    "source": "seed",
+    "metadata": { "category": "subject_verb_agreement", "difficulty": "easy" }
+  },
+  {
+    "input_text": "Incorrect: The result of the experiments were published in a top journal.",
+    "target_text": "Correct: The result of the experiments was published in a top journal.",
+    "stage_id": 3,
+    "source": "seed",
+    "metadata": { "category": "subject_verb_agreement", "difficulty": "medium" }
+  },
+  {
+    "input_text": "Incorrect: Although she was tired, she continues working on the code.",
+    "target_text": "Correct: Although she was tired, she continued working on the code.",
+    "stage_id": 3,
+    "source": "seed",
+    "metadata": { "category": "tense_consistency", "difficulty": "easy" }
+  },
+  {
+    "input_text": "Incorrect: Between you and I, the initial model weights were initialized poorly.",
+    "target_text": "Correct: Between you and me, the initial model weights were initialized poorly.",
+    "stage_id": 3,
+    "source": "seed",
+    "metadata": { "category": "pronoun_case", "difficulty": "medium" }
+  },
+  {
+    "input_text": "Incorrect: The professor learned the students about quantum mechanics.",
+    "target_text": "Correct: The professor taught the students about quantum mechanics.",
+    "stage_id": 3,
+    "source": "seed",
+    "metadata": { "category": "word_choice", "difficulty": "easy" }
+  },
+  {
+    "input_text": "Incorrect: Neither of the solutions work as expected.",
+    "target_text": "Correct: Neither of the solutions works as expected.",
+    "stage_id": 3,
+    "source": "seed",
+    "metadata": { "category": "subject_verb_agreement", "difficulty": "medium" }
+  },
+  {
+    "input_text": "Incorrect: The committee have made its decision.",
+    "target_text": "Correct: The committee has made its decision.",
+    "stage_id": 3,
+    "source": "seed",
+    "metadata": { "category": "collective_noun", "difficulty": "medium" }
+  },
+  {
+    "input_text": "Incorrect: He speaks more better than his colleague.",
+    "target_text": "Correct: He speaks better than his colleague.",
+    "stage_id": 3,
+    "source": "seed",
+    "metadata": { "category": "comparative_degree", "difficulty": "easy" }
+  },
+  {
+    "input_text": "Incorrect: Data was collected from various sources last year.",
+    "target_text": "Correct: Data were collected from various sources last year.",
+    "stage_id": 3,
+    "source": "seed",
+    "metadata": { "category": "plural_noun_agreement", "difficulty": "medium" }
+  },
+  {
+    "input_text": "Incorrect: There is many reasons why gradient clipping is necessary.",
+    "target_text": "Correct: There are many reasons why gradient clipping is necessary.",
+    "stage_id": 3,
+    "source": "seed",
+    "metadata": { "category": "expletive_there", "difficulty": "easy" }
+  },
+  {
+    "input_text": "Incorrect: She performed good on the benchmark test.",
+    "target_text": "Correct: She performed well on the benchmark test.",
+    "stage_id": 3,
+    "source": "seed",
+    "metadata": { "category": "adverb_usage", "difficulty": "easy" }
+  },
+  {
+    "input_text": "Incorrect: The list of requirements are detailed in the specification.",
+    "target_text": "Correct: The list of requirements is detailed in the specification.",
+    "stage_id": 3,
+    "source": "seed",
+    "metadata": { "category": "subject_verb_agreement", "difficulty": "medium" }
+  },
+  {
+    "input_text": "Incorrect: Having finished the experiment, the results were analyzed.",
+    "target_text": "Correct: Having finished the experiment, the researchers analyzed the results.",
+    "stage_id": 3,
+    "source": "seed",
+    "metadata": { "category": "dangling_modifier", "difficulty": "hard" }
+  },
+  {
+    "input_text": "Incorrect: Whom did you say was responsible for the deployment?",
+    "target_text": "Correct: Who did you say was responsible for the deployment?",
+    "stage_id": 3,
+    "source": "seed",
+    "metadata": { "category": "who_whom", "difficulty": "hard" }
+  },
+  {
+    "input_text": "Incorrect: The number of active users are growing rapidly.",
+    "target_text": "Correct: The number of active users is growing rapidly.",
+    "stage_id": 3,
+    "source": "seed",
+    "metadata": { "category": "subject_verb_agreement", "difficulty": "medium" }
+  },
+  {
+    "input_text": "Incorrect: He don't know the reason for the failure.",
+    "target_text": "Correct: He doesn't know the reason for the failure.",
+    "stage_id": 3,
+    "source": "seed",
+    "metadata": { "category": "subject_verb_agreement", "difficulty": "easy" }
+  },
+  {
+    "input_text": "Incorrect: The system work efficiently under heavy load.",
+    "target_text": "Correct: The system works efficiently under heavy load.",
+    "stage_id": 3,
+    "source": "seed",
+    "metadata": { "category": "subject_verb_agreement", "difficulty": "easy" }
+  },
+  {
+    "input_text": "Incorrect: Either the main server or the backup nodes is failing.",
+    "target_text": "Correct: Either the main server or the backup nodes are failing.",
+    "stage_id": 3,
+    "source": "seed",
+    "metadata": { "category": "subject_verb_agreement", "difficulty": "hard" }
+  },
+  {
+    "input_text": "Incorrect: She has wrote three research papers this semester.",
+    "target_text": "Correct: She has written three research papers this semester.",
+    "stage_id": 3,
+    "source": "seed",
+    "metadata": { "category": "past_participle", "difficulty": "medium" }
+  },
+  {
+    "input_text": "Incorrect: The software run faster after the refactoring.",
+    "target_text": "Correct: The software runs faster after the refactoring.",
+    "stage_id": 3,
+    "source": "seed",
+    "metadata": { "category": "subject_verb_agreement", "difficulty": "easy" }
+  },
+  {
+    "input_text": "Incorrect: Every boy and girl have their own locker.",
+    "target_text": "Correct: Every boy and girl has his or her own locker.",
+    "stage_id": 3,
+    "source": "seed",
+    "metadata": { "category": "subject_verb_agreement", "difficulty": "medium" }
+  },
+  {
+    "input_text": "Incorrect: The reason why we failed is because we lacked data.",
+    "target_text": "Correct: The reason why we failed is that we lacked data.",
+    "stage_id": 3,
+    "source": "seed",
+    "metadata": { "category": "redundancy", "difficulty": "hard" }
+  },
+  {
+    "input_text": "Incorrect: Optimization techniques improves convergence rates.",
+    "target_text": "Correct: Optimization techniques improve convergence rates.",
+    "stage_id": 3,
+    "source": "seed",
+    "metadata": { "category": "subject_verb_agreement", "difficulty": "easy" }
+  },
+  {
+    "input_text": "Incorrect: None of the predictions was accurate.",
+    "target_text": "Correct: None of the predictions were accurate.",
+    "stage_id": 3,
+    "source": "seed",
+    "metadata": { "category": "pronoun_agreement", "difficulty": "medium" }
+  }
+]

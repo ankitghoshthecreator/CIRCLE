@@ -1,10 +1,19 @@
 import os
 import json
 import logging
-import torch
 from typing import List, Dict, Optional
 from pydantic import BaseModel, Field
-from torch.utils.data import Dataset
+
+try:
+    import torch
+    from torch.utils.data import Dataset
+    TORCH_AVAILABLE = True
+except ImportError:
+    TORCH_AVAILABLE = False
+    class Dataset:
+        pass
+
+
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 

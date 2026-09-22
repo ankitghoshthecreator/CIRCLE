@@ -1,7 +1,7 @@
 {
   "stage_id": 2,
   "name": "Summarization",
-  "description": "Compress long passages into faithful summaries, teaching internal meaning extraction over surface copying.",
+  "description": "Compress long passages into faithful, concise summaries. Teaches meaning extraction over surface-level copying, content retention, and faithful compression without hallucination.",
   "objectives": ["meaning_extraction", "passage_compression", "content_retention"],
   "target_competence_score": 0.80,
   "hyperparameters": {
@@ -12,7 +12,24 @@
   },
   "replay_ratio": 0.20,
   "probe_prompts": [
-    "Summarize the following passage: Neural networks are computing systems inspired by biological neural networks. They consist of interconnected nodes that process information.",
-    "Summarize the following text: QLoRA allows parameter-efficient fine-tuning of large models on consumer GPUs by quantizing weights to 4-bit and injecting LoRA adapters."
-  ]
+    "Summarize the following passage: Neural networks are computing systems inspired by biological neural networks. They consist of interconnected nodes that process information using connectionist approaches.",
+    "Summarize the following text: QLoRA allows parameter-efficient fine-tuning of large models on consumer GPUs by quantizing weights to 4-bit precision and injecting low-rank adapter layers.",
+    "In one sentence, summarize: The water cycle describes how water evaporates from the surface of the earth, rises into the atmosphere, cools and condenses into rain or snow, and falls back to the surface.",
+    "Write a brief summary of: Photosynthesis is a process used by plants and other organisms to convert light energy into chemical energy stored in glucose. It occurs in the chloroplasts of plant cells.",
+    "Summarize in two sentences: The Industrial Revolution began in Britain in the late 18th century and spread to Europe and North America. It marked the transition from hand production to machine-based manufacturing.",
+    "Give a one-sentence summary of: Reinforcement learning is a type of machine learning where an agent learns to make decisions by receiving rewards or penalties based on its actions in an environment.",
+    "Compress into one sentence: Shakespeare wrote 37 plays and 154 sonnets between approximately 1590 and 1613. His works have been translated into every major language and are performed more often than any other playwright.",
+    "Summarize briefly: DNA, or deoxyribonucleic acid, carries the genetic instructions for the development, functioning, growth and reproduction of all known organisms and many viruses."
+  ],
+  "probe_expected_behaviors": [
+    "Summary must be shorter than the input passage",
+    "Summary must not copy the passage word-for-word (no circular output)",
+    "Summary must retain the key facts from the passage",
+    "Summary should be a complete sentence with proper punctuation"
+  ],
+  "advance_criteria": {
+    "min_mean_score": 0.80,
+    "max_severity_allowed": "medium",
+    "min_probe_pass_rate": 0.75
+  }
 }

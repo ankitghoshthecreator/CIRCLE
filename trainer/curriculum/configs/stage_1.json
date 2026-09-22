@@ -1,7 +1,7 @@
 {
   "stage_id": 1,
   "name": "Base English",
-  "description": "Next-token prediction on general English text to teach token-level fluency, basic syntax, and vocabulary distribution.",
+  "description": "Next-token prediction on general English text to teach token-level fluency, basic syntax, and vocabulary distribution. The model learns to generate grammatically plausible continuations without explicit correction signals.",
   "objectives": ["token_fluency", "basic_syntax", "vocab_distribution"],
   "target_competence_score": 0.85,
   "hyperparameters": {
@@ -14,6 +14,24 @@
   "probe_prompts": [
     "The primary purpose of a language model is to",
     "Machine learning algorithms process data in order to",
-    "When writing software, clean code helps developers to"
-  ]
+    "When writing software, clean code helps developers to",
+    "The sun rises in the east and sets in the",
+    "Water is essential for all living organisms because it",
+    "A well-trained neural network can identify patterns and",
+    "Scientists use experiments to test hypotheses and gather",
+    "Reading books regularly improves vocabulary and critical",
+    "The capital city of France is",
+    "Photosynthesis is the process by which plants convert"
+  ],
+  "probe_expected_behaviors": [
+    "Output should complete the sentence coherently with no repetition",
+    "Output should be at least 5 tokens",
+    "Output should not contain the prompt verbatim as the entire response",
+    "Output should end with a terminal punctuation mark or form a complete clause"
+  ],
+  "advance_criteria": {
+    "min_mean_score": 0.85,
+    "max_severity_allowed": "medium",
+    "min_probe_pass_rate": 0.80
+  }
 }

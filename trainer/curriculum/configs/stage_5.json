@@ -1,8 +1,14 @@
 {
   "stage_id": 5,
   "name": "Conversational Understanding",
-  "description": "Multi-turn dialogue pragmatics, turn-taking, speaker tracking, and cross-turn context preservation.",
-  "objectives": ["turn_taking", "speaker_tracking", "context_carryover"],
+  "description": "Multi-turn dialogue pragmatics, turn-taking, speaker tracking, multi-turn context preservation, assistant persona consistency, and direct query answering.",
+  "objectives": [
+    "turn_taking",
+    "speaker_tracking",
+    "context_carryover",
+    "persona_consistency",
+    "query_resolution"
+  ],
   "target_competence_score": 0.85,
   "hyperparameters": {
     "default_epochs": 2,
@@ -13,6 +19,25 @@
   "replay_ratio": 0.30,
   "probe_prompts": [
     "User: Hi, can you explain how CIRCLE handles catastrophic forgetting?\nAssistant:",
-    "User: What model does CIRCLE use for synthetic data generation?\nAssistant: It uses local Qwen 2.5 via Ollama.\nUser: And what does the critic model do?\nAssistant:"
-  ]
+    "User: What model does CIRCLE use for synthetic data generation?\nAssistant: It uses local Qwen 2.5 via Ollama.\nUser: And what does the critic model do?\nAssistant:",
+    "User: How many stages are in the CIRCLE curriculum?\nAssistant: There are 5 curriculum stages in CIRCLE.\nUser: Which stage focuses on summarization?\nAssistant:",
+    "User: I'm getting an OutOfMemory error during training.\nAssistant: You can reduce batch size or enable gradient accumulation.\nUser: What if I am already using batch size 1?\nAssistant:",
+    "User: Can you help me debug my PyTorch training loop?\nAssistant:",
+    "User: Compare QLoRA and full fine-tuning in two sentences.\nAssistant:",
+    "User: What is the purpose of the evaluation service in CIRCLE?\nAssistant:",
+    "User: Hello! Who created CIRCLE?\nAssistant:",
+    "User: What is replay ratio in curriculum learning?\nAssistant: Replay ratio determines the proportion of previous stage data re-injected into training.\nUser: Why is that helpful?\nAssistant:",
+    "User: Explain how the orchestrator state machine manages transitions.\nAssistant:"
+  ],
+  "probe_expected_behaviors": [
+    "Assistant response must directly answer the user query in a helpful tone",
+    "Multi-turn context must carry over accurately between turns",
+    "Response must maintain clear speaker roles (Assistant persona)",
+    "Output must avoid generic refusal or off-topic responses"
+  ],
+  "advance_criteria": {
+    "min_mean_score": 0.85,
+    "max_severity_allowed": "medium",
+    "min_probe_pass_rate": 0.80
+  }
 }

@@ -1,7 +1,7 @@
 {
   "stage_id": 3,
   "name": "Grammar",
-  "description": "Explicit syntactic well-formedness, subject-verb agreement, and tense consistency.",
+  "description": "Explicit syntactic well-formedness: subject-verb agreement, tense consistency, pronoun-antecedent agreement, and basic error correction. The model learns to identify and fix grammatical errors.",
   "objectives": ["syntactic_correctness", "agreement", "tense_consistency"],
   "target_competence_score": 0.85,
   "hyperparameters": {
@@ -13,6 +13,25 @@
   "replay_ratio": 0.20,
   "probe_prompts": [
     "Correct the grammatical errors in this sentence: They goes to the store yesterday to bought milk.",
-    "Fix the subject-verb agreement in: The team of engineers are working hard on the update."
-  ]
+    "Fix the subject-verb agreement in: The team of engineers are working hard on the update.",
+    "Rewrite with correct grammar: She don't know what happened to her friend last week.",
+    "Correct the tense error: Yesterday, he will walk to school and learned mathematics.",
+    "Fix the pronoun error: Each student must complete their own assignment by himself or herself.",
+    "Correct this sentence: Neither the manager nor the employees was aware of the policy change.",
+    "Fix the double negative: I didn't see nothing wrong with the original plan.",
+    "Correct the agreement error: The data shows that both factors are contributing to the problem equally.",
+    "Rewrite correctly: Everyone in the classrooms have submitted their final projects.",
+    "Fix this sentence: If I would have known the answer, I would told you earlier."
+  ],
+  "probe_expected_behaviors": [
+    "Output must correct the identified grammatical error",
+    "Output must preserve the original meaning of the sentence",
+    "Corrected sentence must use proper tense, agreement, and syntax",
+    "Output must be a complete, well-formed sentence"
+  ],
+  "advance_criteria": {
+    "min_mean_score": 0.85,
+    "max_severity_allowed": "medium",
+    "min_probe_pass_rate": 0.80
+  }
 }

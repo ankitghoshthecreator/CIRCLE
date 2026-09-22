@@ -1,8 +1,14 @@
 {
   "stage_id": 4,
   "name": "Punctuation",
-  "description": "Fine-grained use of punctuation (. , ! ?) and clause boundaries to prevent run-on sentences.",
-  "objectives": ["clause_boundaries", "punctuation_precision", "sentence_segmentation"],
+  "description": "Fine-grained use of punctuation (. , ! ? ; : - quotes) and clause boundaries to prevent run-on sentences, missing commas, improper apostrophes, and punctuation fragments.",
+  "objectives": [
+    "clause_boundaries",
+    "punctuation_precision",
+    "sentence_segmentation",
+    "apostrophe_usage",
+    "quotation_formatting"
+  ],
   "target_competence_score": 0.85,
   "hyperparameters": {
     "default_epochs": 2,
@@ -13,6 +19,25 @@
   "replay_ratio": 0.25,
   "probe_prompts": [
     "Add correct punctuation and capitalization to: although it was raining we decided to go for a run in the park",
-    "Separate into proper sentences: the training loop finished successfully loss dropped steadily we saved the checkpoint"
-  ]
+    "Separate into proper sentences: the training loop finished successfully loss dropped steadily we saved the checkpoint",
+    "Punctuate correctly: its important to check the models outputs before saving it to disk",
+    "Add direct quotation marks and commas: she said we will evaluate the results tomorrow morning",
+    "Fix the missing serial commas and punctuation: we need to buy apples oranges bananas and grapes for the smoothie",
+    "Punctuate this complex sentence: whenever the learning rate is too high gradients explode and training fails",
+    "Fix comma splice: the model converged quickly, it achieved ninety percent accuracy",
+    "Add question mark or period appropriately: can you explain why the loss did not decrease during epoch two",
+    "Fix hyphenation and apostrophe: the user interface was well designed but the students code had many errors",
+    "Punctuate semicolon usage: the dataset was small nevertheless the performance was impressive"
+  ],
+  "probe_expected_behaviors": [
+    "Output must add appropriate punctuation marks (periods, commas, question marks, quotes)",
+    "Output must fix capitalization at sentence boundaries",
+    "Output must eliminate comma splices and run-on sentences",
+    "Output must maintain original sentence meaning while fixing punctuation"
+  ],
+  "advance_criteria": {
+    "min_mean_score": 0.85,
+    "max_severity_allowed": "medium",
+    "min_probe_pass_rate": 0.80
+  }
 }
