@@ -12,7 +12,8 @@ class GroqCriticAgent:
     """High-capacity evaluation agent connecting to Groq-hosted 70B models for failure mode critique."""
     def __init__(self, api_key: str = None, model_name: str = None):
         self.api_key = api_key or os.getenv("GROQ_API_KEY")
-        self.model_name = model_name or os.getenv("GROQ_MODEL", "qwen/qwen3.6-27b")
+        self.model_name = model_name or os.getenv("GROQ_MODEL", "llama-3.3-70b-versatile")
+
         
         if not self.api_key or self.api_key == "your_groq_api_key_here":
             logging.warning("GROQ_API_KEY not set or using placeholder. API calls may fail.")
