@@ -309,11 +309,11 @@ class ClosedLoopOrchestrator:
             from eval.failure_parser import FailureModeReport
             report = FailureModeReport(**failure_report_dict)
             prompt_writer = self._components["TargetedPromptWriter"]()
-            prompt_batch = prompt_writer.generate_prompt_batch(
-                stage_id=s.current_stage,
-                failure_report=report,
-                samples_per_request=5,
+            prompt_batch = prompt_writer.build_batch_from_report(
+                report=report,
+                default_samples_per_request=5,
             )
+
 
             if not prompt_batch.prompt_specs:
                 logger.info("[Generate] No commissionable failure modes found. Skipping generation.")
