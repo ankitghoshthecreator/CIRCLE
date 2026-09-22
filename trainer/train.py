@@ -32,7 +32,8 @@ def train_stage(
     custom_examples: list = None
 ):
     if stage_id not in STAGES:
-        raise ValueError(f"Invalid stage_id: {stage_id}. Choose between 1 and 5.")
+        raise ValueError(f"Invalid stage_id: {stage_id}. Stage configuration not found in STAGES registry.")
+
 
     stage = STAGES[stage_id]
     logging.info(f"=== Starting QLoRA Training for Stage {stage.stage_id}: {stage.name} ===")
