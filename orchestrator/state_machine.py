@@ -79,10 +79,11 @@ class PipelineState(BaseModel):
     run_id: str = Field(..., description="Unique identifier for this pipeline run")
 
     # ── Progress ─────────────────────────────────────────────────
-    current_stage: int = Field(1, ge=1, le=5)
+    current_stage: int = Field(1, ge=1, le=100)
     current_iteration: int = Field(1, ge=1)
     max_iterations_per_stage: int = Field(3, ge=1)
     total_stages: int = Field(5, ge=1)
+
     current_state: str = LoopState.IDLE        # LoopState value
 
     # ── Advancement Threshold ─────────────────────────────────────
