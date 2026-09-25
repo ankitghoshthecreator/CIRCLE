@@ -18,6 +18,7 @@ from trainer.curriculum.dataset_handler import (
     CurriculumExample
 )
 from trainer.replay_buffer import ReplayBufferManager
+from trainer.checkpoint_tracker import CheckpointTracker
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 
@@ -29,16 +30,24 @@ def train_stage(
     lr: float = 2e-4,
     checkpoint_dir: str = "./trainer/checkpoints",
     data_dir: str = "./data",
-    custom_examples: list = None
+    custom_examples: list = None,
+    save_every_n_steps: int = 100,
+    csv_filename: str = "loss_log.csv",
 ):
     if stage_id not in STAGES:
         raise ValueError(f"Invalid stage_id: {stage_id}. Stage configuration not found in STAGES registry.")
-
 
     stage = STAGES[stage_id]
     logging.info(f"=== Starting QLoRA Training for Stage {stage.stage_id}: {stage.name} ===")
     logging.info(f"Objectives: {stage.objectives}")
     logging.info(f"Replay Ratio: {stage.replay_ratio}")
+
+    # Initialize Checkpoint & Overfitting Tracker (CSV logging + periodic 100-step + best loss tracking)
+    tracker = CheckpointTracker(
+        checkpoint_dir=checkpoint_dir,
+        save_every_n_steps=save_every_n_steps,
+        csv_filename=csv_filename,
+    )
 
     # Step 1: Load 4-bit quantized base model and tokenizer
     model, tokenizer = load_qlora_model_and_tokenizer(model_name_or_path="gpt2", is_trainable=True)
@@ -67,7 +76,7 @@ def train_stage(
     total_steps = (len(dataloader) // grad_accum_steps + 1) * epochs
     scheduler = get_linear_schedule_with_warmup(optimizer, num_warmup_steps=1, num_training_steps=total_steps)
 
-    # Step 4: Training Loop
+    # Step 4: Training Loop with Step CSV Logging & Best/100th Checkpoints
     model.train()
     for epoch in range(epochs):
         logging.info(f"--- Epoch {epoch + 1}/{epochs} ---")
@@ -83,22 +92,29 @@ def train_stage(
             loss = outputs.loss / grad_accum_steps
             loss.backward()
 
-            total_loss += loss.item() * grad_accum_steps
+            step_loss = loss.item() * grad_accum_steps
+            total_loss += step_loss
 
             if (step + 1) % grad_accum_steps == 0 or (step + 1) == len(dataloader):
                 optimizer.step()
                 scheduler.step()
                 optimizer.zero_grad()
 
-            logging.info(f"Step {step + 1}/{len(dataloader)} - Loss: {loss.item() * grad_accum_steps:.4f}")
+            # Record step to CSV, check 100th step periodic checkpoint, & update best loss checkpoint
+            t_info = tracker.record_step(loss=step_loss, model=model, tokenizer=tokenizer)
+
+            logging.info(
+                f"Step {t_info['step']} - Loss: {step_loss:.4f} "
+                f"(Best Loss: {t_info['best_loss']:.4f} at Step {t_info['best_step']})"
+            )
 
         avg_loss = total_loss / len(dataloader)
         logging.info(f"Epoch {epoch + 1} Complete - Average Loss: {avg_loss:.4f}")
 
-    # Step 5: Save QLoRA Adapter Checkpoint
+    # Step 5: Save Final QLoRA Adapter Checkpoint for stage
     stage_checkpoint_path = os.path.join(checkpoint_dir, f"stage_{stage_id}")
     os.makedirs(stage_checkpoint_path, exist_ok=True)
-    logging.info(f"Saving stage {stage_id} QLoRA adapter checkpoint to '{stage_checkpoint_path}'...")
+    logging.info(f"Saving stage {stage_id} final QLoRA adapter checkpoint to '{stage_checkpoint_path}'...")
     model.save_pretrained(stage_checkpoint_path)
     tokenizer.save_pretrained(stage_checkpoint_path)
     logging.info(f"Stage {stage_id} training pass completed successfully.")

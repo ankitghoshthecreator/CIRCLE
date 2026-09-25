@@ -1,0 +1,16 @@
+{
+  "run_id": "run_20260922_155925_2266f2",
+  "current_stage": 1,
+  "current_iteration": 1,
+  "max_iterations_per_stage": 1,
+  "total_stages": 5,
+  "current_state": "evaluating",
+  "stage_advance_threshold": 0.0,
+  "stage_results": [],
+  "error_log": [],
+  "started_at": "2026-09-22T15:59:25.272676+00:00",
+  "last_updated_at": "2026-09-22T15:59:25.354527+00:00",
+  "data_dir": "./data",
+  "checkpoint_dir": "./trainer/checkpoints",
+  "log_dir": "./logs"
+}

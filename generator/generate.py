@@ -37,6 +37,7 @@ class SyntheticDataSample(BaseModel):
     prompt_spec_id: str = Field(..., description="Originating TargetedPromptSpec request_id")
     generated_at: str = Field(default_factory=lambda: datetime.utcnow().isoformat())
     generation_metadata: Dict[str, Any] = Field(default_factory=dict)
+    reward_score: float = Field(default=0.0, description="RL reward score from Groq critic (0–1); 0.0 = not yet scored")
 
     model_config = {"use_enum_values": True}
 
@@ -64,12 +65,17 @@ class LocalDataGeneratorEngine:
         self,
         backend: str = "ollama",
         endpoint_url: str = "http://localhost:11434",
-        model_name: str = "deepseek-r1:32b",
+        model_name: str = None,
         request_timeout_sec: float = 10.0
     ):
+        import os
         self.backend = backend.lower()
         self.endpoint_url = endpoint_url.strip().rstrip("/")
-        self.model_name = model_name
+        # Prefer env var so any locally pulled model works without code changes
+        self.model_name = (
+            model_name
+            or os.getenv("GENERATOR_MODEL", "qwen2.5-coder:7b")
+        )
         self.request_timeout_sec = request_timeout_sec
         self._endpoint_checked = False
         self._endpoint_available = False
@@ -81,7 +87,8 @@ class LocalDataGeneratorEngine:
         try:
             url = f"{self.endpoint_url}/api/tags" if self.backend == "ollama" else f"{self.endpoint_url}/models"
             req = urllib.request.Request(url, headers={"User-Agent": "CIRCLE-Generator"})
-            with urllib.request.urlopen(req, timeout=0.2) as resp:
+            # Use 3 s timeout (was 0.2 s) so Ollama has time to respond on slower machines
+            with urllib.request.urlopen(req, timeout=3.0) as resp:
                 self._endpoint_available = (resp.status == 200)
         except Exception:
             self._endpoint_available = False
@@ -256,6 +263,176 @@ class LocalDataGeneratorEngine:
             f.write(json.dumps(batch.model_dump(), indent=2))
         logger.info(f"Saved SyntheticDataBatch ({batch.total_samples} samples) to '{output_path}'")
         return output_path
+
+    # ──────────────────────────────────────────────────────────────
+    # RL-specific generation (OllamaPromptRequest format)
+    # ──────────────────────────────────────────────────────────────
+
+    def rl_generate_from_request(
+        self,
+        request,            # OllamaPromptRequest from generator.rl_prompt_builder
+        reward_score: float = 0.0,
+    ) -> "SyntheticDataBatch":
+        """
+        Execute one OllamaPromptRequest from the RL loop.
+
+        Sends the system + user prompt directly to Ollama (or mock) and
+        attaches the Groq reward_score to every generated sample so it
+        can be used later for weighted training.
+
+        Args:
+            request:       OllamaPromptRequest built by RLPromptBuilder.
+            reward_score:  Scalar reward from RLRewardCalculator (0–1).
+
+        Returns:
+            SyntheticDataBatch ready for validation and merging.
+        """
+        import time
+        start_t = time.time()
+        samples: List[SyntheticDataSample] = []
+
+        endpoint_active = self.is_endpoint_available()
+
+        for idx in range(1, request.num_samples + 1):
+            sample_id = f"rl_s{request.stage_id}_{request.failure_category}_{idx:03d}"
+
+            if endpoint_active and self.backend == "ollama":
+                raw = self._rl_call_ollama(
+                    system_prompt=request.system_prompt,
+                    user_prompt=request.user_prompt,
+                    sample_id=sample_id,
+                    request=request,
+                    idx=idx,
+                )
+            else:
+                raw = self._rl_mock_sample(
+                    sample_id=sample_id,
+                    request=request,
+                    idx=idx,
+                )
+
+            # Attach RL reward score
+            raw.reward_score = reward_score
+            samples.append(raw)
+
+        elapsed = round(time.time() - start_t, 3)
+        batch = SyntheticDataBatch(
+            stage_id=request.stage_id,
+            total_samples=len(samples),
+            samples=samples,
+            generation_time_sec=elapsed,
+        )
+        logger.info(
+            f"[RL-Generate] {len(samples)} samples for [{request.severity}] "
+            f"{request.failure_category} via {'ollama' if endpoint_active else 'mock'} "
+            f"in {elapsed:.2f}s (reward={reward_score:.3f})"
+        )
+        return batch
+
+    def _rl_call_ollama(
+        self, system_prompt: str, user_prompt: str,
+        sample_id: str, request, idx: int
+    ) -> "SyntheticDataSample":
+        """Send a chat-style request to Ollama /api/chat and parse JSON array."""
+        url = f"{self.endpoint_url}/api/chat"
+        payload = {
+            "model": self.model_name,
+            "messages": [
+                {"role": "system", "content": system_prompt},
+                {"role": "user",   "content": user_prompt},
+            ],
+            "stream": False,
+            "format": "json",
+        }
+        try:
+            data = json.dumps(payload).encode("utf-8")
+            req = urllib.request.Request(
+                url, data=data,
+                headers={"Content-Type": "application/json"}
+            )
+            with urllib.request.urlopen(req, timeout=self.request_timeout_sec) as resp:
+                result = json.loads(resp.read().decode("utf-8"))
+                content = result.get("message", {}).get("content", "{}")
+                # Ollama may return a JSON array or a single object
+                parsed = json.loads(content)
+                if isinstance(parsed, list) and parsed:
+                    item = parsed[min(idx - 1, len(parsed) - 1)]
+                elif isinstance(parsed, dict):
+                    item = parsed
+                else:
+                    item = {}
+                inp = item.get("input_text", f"Corrective prompt for {request.failure_category} ({idx})")
+                tgt = item.get("target_text", f"Corrective response for {request.failure_category} ({idx})")
+                return SyntheticDataSample(
+                    sample_id=sample_id,
+                    stage_id=request.stage_id,
+                    category=request.failure_category,
+                    input_text=inp,
+                    target_text=tgt,
+                    prompt_spec_id=request.request_id,
+                    generation_metadata={
+                        "backend": "ollama_rl",
+                        "model_name": self.model_name,
+                        "severity": request.severity,
+                    },
+                )
+        except Exception as e:
+            logger.warning(f"[RL-Generate] Ollama call failed ({e}). Falling back to mock.")
+            self._endpoint_available = False
+            return self._rl_mock_sample(sample_id, request, idx)
+
+    def _rl_mock_sample(
+        self, sample_id: str, request, idx: int
+    ) -> "SyntheticDataSample":
+        """Deterministic high-quality mock sample for RL loop testing."""
+        cat = request.failure_category
+        mocks = {
+            "degenerate_repetition": (
+                f"Describe the process of photosynthesis in detail (sample {idx}).",
+                "Photosynthesis converts light energy into glucose. Chlorophyll absorbs sunlight, "
+                "water molecules are split releasing oxygen, and carbon dioxide is fixed into sugars "
+                "through the Calvin cycle.",
+            ),
+            "abrupt_cutoff": (
+                f"Explain why regular exercise is important for health (sample {idx}).",
+                "Regular exercise strengthens the cardiovascular system, improves mental health by "
+                "releasing endorphins, and helps maintain a healthy body weight. Consistent physical "
+                "activity also reduces the risk of chronic diseases such as diabetes and hypertension.",
+            ),
+            "speaker_drift": (
+                f"Write a first-person account of visiting a new city (sample {idx}).",
+                "I arrived at the station as the sun was setting, my bag heavy on my shoulder. "
+                "I found a small café near the square and ordered coffee, watching the locals "
+                "pass by as I planned my first evening in the city.",
+            ),
+            "vocabulary_poverty": (
+                f"Describe the atmosphere of a thunderstorm (sample {idx}).",
+                "The tempestuous storm unleashed torrential rain across the parched landscape. "
+                "Jagged lightning illuminated the roiling cumulus clouds while resonant thunder "
+                "reverberated through the valley below.",
+            ),
+        }
+        inp, tgt = mocks.get(
+            cat,
+            (
+                f"Generate a high-quality response addressing {cat} (sample {idx}).",
+                f"This is a well-formed, complete, and diverse response that correctly "
+                f"addresses the linguistic requirement for stage {request.stage_id}.",
+            )
+        )
+        return SyntheticDataSample(
+            sample_id=sample_id,
+            stage_id=request.stage_id,
+            category=cat,
+            input_text=inp,
+            target_text=tgt,
+            prompt_spec_id=request.request_id,
+            generation_metadata={
+                "backend": "mock_rl",
+                "model_name": "mock",
+                "severity": request.severity,
+            },
+        )
 
     def load_synthetic_batch(self, input_path: str) -> SyntheticDataBatch:
         """Loads SyntheticDataBatch from JSON file."""

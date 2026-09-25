@@ -1,0 +1,43 @@
+{
+  "stage_id": 6,
+  "name": "Coding & Technical Reasoning",
+  "description": "Python syntax, function definitions, algorithmic logic, docstrings, unit testing, and code completion.",
+  "objectives": [
+    "python_syntax",
+    "function_definitions",
+    "algorithmic_logic",
+    "docstring_generation",
+    "error_fixing"
+  ],
+  "target_competence_score": 0.85,
+  "hyperparameters": {
+    "default_epochs": 2,
+    "batch_size": 1,
+    "grad_accum_steps": 4,
+    "learning_rate": 0.0002
+  },
+  "replay_ratio": 0.25,
+  "probe_prompts": [
+    "Write a Python function to check if a number is prime:",
+    "Fix the syntax error in: def process_data(items) return [x * 2 for x in items]",
+    "Write a Python function to reverse a string without using built-in slice operators:",
+    "Write a docstring for a function that reads JSON files from disk and validates schema:",
+    "Write a Python class for a Stack with push, pop, and is_empty methods:",
+    "Fix the IndexError in this Python snippet: data = [1, 2, 3]; print(data[3])",
+    "Write a Python function to compute the Fibonacci sequence up to n terms:",
+    "Write a Python function to flatten a nested list of integers:",
+    "Write a Python unit test using unittest to test an add(a, b) function:",
+    "Write a Python function to count word frequencies in a text string:"
+  ],
+  "probe_expected_behaviors": [
+    "Output must generate syntactically valid Python code",
+    "Output must include complete function bodies and proper indentation",
+    "Output must handle boundary conditions in algorithmic logic",
+    "Output must avoid cutoffs or missing return statements"
+  ],
+  "advance_criteria": {
+    "min_mean_score": 0.85,
+    "max_severity_allowed": "medium",
+    "min_probe_pass_rate": 0.80
+  }
+}

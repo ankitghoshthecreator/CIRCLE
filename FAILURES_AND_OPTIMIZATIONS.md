@@ -479,4 +479,48 @@ The table below documents the empirical test results across all 15 hard-mode str
 | **T14** | Probe Harness Error | Non-existent stage ID exception handling | **PASS** | Stage ID 99 raises `FileNotFoundError` gracefully |
 | **T15** | Subprocess Execution | `test_part15.py` standalone execution | **PASS** | Subprocess invocation of `test_part15.py` exits with 0 return code |
 
+---
+
+## 7. Part 17: True RLAIF (Reinforcement Learning from AI Feedback) Loop
+
+### Architecture & Closed-Loop Workflow
+The RLAIF orchestrator ([`scripts/rl_loop.py`](file:///d:/CIRCLE/scripts/rl_loop.py)) tightly couples model evaluation, Groq AI critique, targeted prompt generation, Ollama synthetic pair generation, dataset merging, and PyTorch QLoRA fine-tuning into a closed feedback loop:
+
+1. **Model Output Probing**: Evaluates current GPT-2 model weights on stage-specific prompt probes.
+2. **Groq AI Critique & Reward Conversion** ([`eval/rl_reward.py`](file:///d:/CIRCLE/eval/rl_reward.py)): Converts raw feedback into a normalized scalar reward $[0.0, 1.0]$.
+3. **Targeted Prompt Building** ([`generator/rl_prompt_builder.py`](file:///d:/CIRCLE/generator/rl_prompt_builder.py)): Extracts commission failure modes and crafts targeted Ollama prompt requests.
+4. **Ollama Data Generation & Merging** ([`generator/generate.py`](file:///d:/CIRCLE/generator/generate.py)): Generates corrective training pairs via `qwen2.5-coder:7b` and merges them into `data/stage_X.json`.
+5. **QLoRA Retraining** ([`trainer/train.py`](file:///d:/CIRCLE/trainer/train.py)): Retrains GPT-2 QLoRA adapters on the enriched dataset.
+
+### Verification Run Results (`rl_20260923_041612_aec782`)
+- **Stage 1–5 Mastery**: Successfully advanced across all 5 curriculum stages, reaching a perfect `1.000` pass reward score at step 199 for Stage 1 and step 1 for Stages 2–5.
+
+---
+
+## 8. Part 18: Checkpoint & Overfitting Tracker Architecture
+
+### Features & Design ([`trainer/checkpoint_tracker.py`](file:///d:/CIRCLE/trainer/checkpoint_tracker.py))
+1. **Periodic 100th-Step Saving**: Saves checkpoint directories `checkpoint_step_100`, `checkpoint_step_200`, etc., on every 100th optimization step.
+2. **Lowest-Loss Checkpoint Replacement (`checkpoint_best`)**:
+   - Tracks global `best_loss`.
+   - Overwrites and replaces `checkpoint_best` whenever current loss improves (e.g. step 150 loss 7.5 saved $\rightarrow$ step 151 loss 7.9 ignored $\rightarrow$ step 152 loss 6.9 replaces step 150).
+3. **CSV Overfitting Logger ([`loss_log.csv`](file:///d:/CIRCLE/trainer/checkpoints/loss_log.csv))**:
+   - Logs `step` (column 1) and `loss` (column 2) at every single step for live overfitting analysis.
+
+### Unit Test Verification ([`tests/test_checkpoint_tracker.py`](file:///d:/CIRCLE/tests/test_checkpoint_tracker.py))
+- **Results**: **3 / 3 PASSED** (CSV logging format, best loss replacement logic, and 100th-step periodic saving).
+
+---
+
+## 9. Part 19: High-Variety Chat Dataset Generator & Interactive CLI
+
+### 1000-Pair Chat Generator ([`scripts/generate_chat_dataset.py`](file:///d:/CIRCLE/scripts/generate_chat_dataset.py))
+- Uses Ollama (`qwen2.5-coder:7b`) to generate 1,000 diverse conversational QA pairs across Greetings, Software/Docker/Linux/Python QA, Science Explanations, Math Logic, and Assistance.
+- Formats inputs into structured chat prompt format: `User: <question>\nAssistant: <answer>`.
+
+### Interactive Chat CLI ([`scripts/chat.py`](file:///d:/CIRCLE/scripts/chat.py))
+- Provides an interactive terminal CLI to converse with fine-tuned GPT-2 QLoRA adapter weights (`--checkpoint trainer/checkpoints/checkpoint_best` or `--checkpoint trainer/checkpoints/stage_5`).
+- Includes smart adapter folder resolution (`_find_adapter_dir`) and output turn truncation to eliminate rambling.
+
+
 

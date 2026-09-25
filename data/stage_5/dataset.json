@@ -4,244 +4,349 @@
     "target_text": "CIRCLE handles catastrophic forgetting by using a configurable replay ratio. During training on later curriculum stages, a specified fraction of high-quality synthetic and seed samples from earlier stages is re-injected into the training batch.",
     "stage_id": 5,
     "source": "seed",
-    "metadata": { "topic": "circle_architecture", "multi_turn": false }
+    "metadata": {
+      "topic": "circle_architecture",
+      "multi_turn": false
+    }
   },
   {
     "input_text": "User: What model does CIRCLE use for synthetic data generation?\nAssistant: It uses local Qwen 2.5 via Ollama.\nUser: And what does the critic model do?\nAssistant:",
     "target_text": "The critic model (also powered by LLM judgment) evaluates generated synthetic examples against strict criteria (grammar, coherence, stage alignment) and filters out low-quality or hallucinated prompt-completion pairs before they reach training.",
     "stage_id": 5,
     "source": "seed",
-    "metadata": { "topic": "circle_architecture", "multi_turn": true }
+    "metadata": {
+      "topic": "circle_architecture",
+      "multi_turn": true
+    }
   },
   {
     "input_text": "User: How many stages are in the CIRCLE curriculum?\nAssistant: There are 5 curriculum stages in CIRCLE.\nUser: Which stage focuses on summarization?\nAssistant:",
     "target_text": "Stage 2 is dedicated to Summarization. It teaches the model to extract key meaning and produce faithful, concise compressions without copying input text verbatim.",
     "stage_id": 5,
     "source": "seed",
-    "metadata": { "topic": "curriculum_stages", "multi_turn": true }
+    "metadata": {
+      "topic": "curriculum_stages",
+      "multi_turn": true
+    }
   },
   {
     "input_text": "User: I'm getting an OutOfMemory error during PyTorch training.\nAssistant: You can reduce batch size or enable gradient accumulation.\nUser: What if I am already using batch size 1?\nAssistant:",
     "target_text": "If you are already using batch size 1, you can enable gradient checkpointing, reduce sequence max_length (e.g., from 512 to 128), or use QLoRA 4-bit quantization with `bitsandbytes` to drastically lower GPU VRAM overhead.",
     "stage_id": 5,
     "source": "seed",
-    "metadata": { "topic": "troubleshooting", "multi_turn": true }
+    "metadata": {
+      "topic": "troubleshooting",
+      "multi_turn": true
+    }
   },
   {
     "input_text": "User: Can you help me debug my PyTorch training loop?\nAssistant:",
     "target_text": "I would be happy to help debug your PyTorch training loop! Please share the training script or error traceback, including details about optimizer steps, zero_grad calls, loss computation, and tensor shapes.",
     "stage_id": 5,
     "source": "seed",
-    "metadata": { "topic": "debugging", "multi_turn": false }
+    "metadata": {
+      "topic": "debugging",
+      "multi_turn": false
+    }
   },
   {
     "input_text": "User: Compare QLoRA and full fine-tuning in two sentences.\nAssistant:",
     "target_text": "QLoRA freezes the base model weights in 4-bit precision and only trains lightweight low-rank adapter layers, dramatically reducing VRAM usage. In contrast, full fine-tuning updates all model parameters, requiring high GPU memory and full gradient tracking.",
     "stage_id": 5,
     "source": "seed",
-    "metadata": { "topic": "model_training", "multi_turn": false }
+    "metadata": {
+      "topic": "model_training",
+      "multi_turn": false
+    }
   },
   {
     "input_text": "User: What is the purpose of the evaluation service in CIRCLE?\nAssistant:",
     "target_text": "The evaluation service runs automated probe benchmarks and automated LLM-as-a-judge scoring against trained checkpoints to measure competence scores, detect failures, and trigger curriculum stage transitions.",
     "stage_id": 5,
     "source": "seed",
-    "metadata": { "topic": "circle_architecture", "multi_turn": false }
+    "metadata": {
+      "topic": "circle_architecture",
+      "multi_turn": false
+    }
   },
   {
     "input_text": "User: Hello! Who created CIRCLE?\nAssistant:",
     "target_text": "CIRCLE was designed and built as a closed-loop curriculum learning framework for small language models, featuring dynamic synthetic dataset generation, automated evaluation, and state-machine orchestration.",
     "stage_id": 5,
     "source": "seed",
-    "metadata": { "topic": "general_qa", "multi_turn": false }
+    "metadata": {
+      "topic": "general_qa",
+      "multi_turn": false
+    }
   },
   {
     "input_text": "User: What is replay ratio in curriculum learning?\nAssistant: Replay ratio determines the proportion of previous stage data re-injected into training.\nUser: Why is that helpful?\nAssistant:",
     "target_text": "It prevents catastrophic forgetting by ensuring that as the model acquires higher-level skills in later stages, it continuously maintains its foundational abilities from earlier stages.",
     "stage_id": 5,
     "source": "seed",
-    "metadata": { "topic": "curriculum_learning", "multi_turn": true }
+    "metadata": {
+      "topic": "curriculum_learning",
+      "multi_turn": true
+    }
   },
   {
     "input_text": "User: Explain how the orchestrator state machine manages transitions.\nAssistant:",
     "target_text": "The orchestrator state machine tracks stage state transitions based on competence scores returned by the evaluation service. If the model passes competence thresholds, it advances to the next stage; if severe failures occur, it triggers replay or remediation.",
     "stage_id": 5,
     "source": "seed",
-    "metadata": { "topic": "orchestrator", "multi_turn": false }
+    "metadata": {
+      "topic": "orchestrator",
+      "multi_turn": false
+    }
   },
   {
     "input_text": "User: What is the difference between supervised fine-tuning and curriculum training?\nAssistant:",
     "target_text": "Supervised fine-tuning trains a model on a static dataset all at once. Curriculum training structures learning into progressive stages of increasing difficulty (e.g., fluency -> grammar -> dialogue), yielding faster convergence and superior stability.",
     "stage_id": 5,
     "source": "seed",
-    "metadata": { "topic": "curriculum_learning", "multi_turn": false }
+    "metadata": {
+      "topic": "curriculum_learning",
+      "multi_turn": false
+    }
   },
   {
     "input_text": "User: Can you explain how loss accumulation works?\nAssistant: Loss accumulation sums gradients over multiple micro-batches before calling optimizer.step().\nUser: Does that change the effective batch size?\nAssistant:",
     "target_text": "Yes, exactly! The effective batch size becomes `per_device_batch_size * grad_accum_steps * num_gpus`. This allows simulating large batch sizes on constrained GPU hardware.",
     "stage_id": 5,
     "source": "seed",
-    "metadata": { "topic": "training_mechanics", "multi_turn": true }
+    "metadata": {
+      "topic": "training_mechanics",
+      "multi_turn": true
+    }
   },
   {
     "input_text": "User: What happens if a probe fails during evaluation?\nAssistant:",
     "target_text": "When a probe fails, the evaluator logs the error category and failure severity. The orchestrator records this failure in state history and can request target synthetic generation addressing that exact weakness.",
     "stage_id": 5,
     "source": "seed",
-    "metadata": { "topic": "eval_system", "multi_turn": false }
+    "metadata": {
+      "topic": "eval_system",
+      "multi_turn": false
+    }
   },
   {
     "input_text": "User: What format are CIRCLE dataset files stored in?\nAssistant:",
     "target_text": "CIRCLE datasets are stored in standardized JSON files containing lists of prompt-target objects with input_text, target_text, stage_id, source, and metadata fields.",
     "stage_id": 5,
     "source": "seed",
-    "metadata": { "topic": "data_format", "multi_turn": false }
+    "metadata": {
+      "topic": "data_format",
+      "multi_turn": false
+    }
   },
   {
     "input_text": "User: I want to add a 6th curriculum stage. How would I do that?\nAssistant:",
     "target_text": "To add a 6th stage, create `trainer/curriculum/configs/stage_6.json`, create `data/stage_6/dataset.json`, update the stage count in `stage_config.py`, and register any stage-specific evaluation probes in `eval/`.",
     "stage_id": 5,
     "source": "seed",
-    "metadata": { "topic": "extensibility", "multi_turn": false }
+    "metadata": {
+      "topic": "extensibility",
+      "multi_turn": false
+    }
   },
   {
     "input_text": "User: Why do we use low-rank adaptation?\nAssistant:",
     "target_text": "Low-Rank Adaptation (LoRA) decomposes weight update matrices into smaller low-rank matrices, drastically reducing trainable parameter count by 99%+ while keeping model capabilities intact.",
     "stage_id": 5,
     "source": "seed",
-    "metadata": { "topic": "lora", "multi_turn": false }
+    "metadata": {
+      "topic": "lora",
+      "multi_turn": false
+    }
   },
   {
     "input_text": "User: How does the generator know what kind of synthetic data to make?\nAssistant:",
     "target_text": "The orchestrator passes the active stage configuration, target objectives, and any recent failure patterns to the generator, which crafts prompt templates for the generator backend.",
     "stage_id": 5,
     "source": "seed",
-    "metadata": { "topic": "generator", "multi_turn": false }
+    "metadata": {
+      "topic": "generator",
+      "multi_turn": false
+    }
   },
   {
     "input_text": "User: What is the target competence score for Stage 1?\nAssistant:",
     "target_text": "The target competence score for Stage 1 (Base English) is 0.85, requiring high token-level fluency and coherent sentence completions before advancing.",
     "stage_id": 5,
     "source": "seed",
-    "metadata": { "topic": "curriculum_configs", "multi_turn": false }
+    "metadata": {
+      "topic": "curriculum_configs",
+      "multi_turn": false
+    }
   },
   {
     "input_text": "User: What does Pydantic do in CIRCLE?\nAssistant:",
     "target_text": "Pydantic enforces strict schema validation and typing for dataset samples (`CurriculumExample`), configuration objects, and orchestrator state representations across CIRCLE services.",
     "stage_id": 5,
     "source": "seed",
-    "metadata": { "topic": "python_stack", "multi_turn": false }
+    "metadata": {
+      "topic": "python_stack",
+      "multi_turn": false
+    }
   },
   {
     "input_text": "User: Is CIRCLE designed to run on a single machine?\nAssistant: Yes, CIRCLE can run locally or on a Kubernetes cluster.\nUser: What is needed to run locally?\nAssistant:",
     "target_text": "To run locally, you need Python 3.10+, PyTorch with CUDA (or CPU fallback), Ollama running locally for synthetic data generation, and the CIRCLE CLI tool.",
     "stage_id": 5,
     "source": "seed",
-    "metadata": { "topic": "deployment", "multi_turn": true }
+    "metadata": {
+      "topic": "deployment",
+      "multi_turn": true
+    }
   },
   {
     "input_text": "User: How does the orchestrator save its progress?\nAssistant:",
     "target_text": "The orchestrator serializes its `PipelineState` Pydantic model to a `state.json` file on disk whenever a stage step or transition completes, allowing full resumption after failure.",
     "stage_id": 5,
     "source": "seed",
-    "metadata": { "topic": "orchestrator", "multi_turn": false }
+    "metadata": {
+      "topic": "orchestrator",
+      "multi_turn": false
+    }
   },
   {
     "input_text": "User: What are probe prompts?\nAssistant:",
     "target_text": "Probe prompts are standardized evaluation inputs designed to test specific stage competencies (e.g., summarization accuracy, subject-verb agreement) during evaluation runs.",
     "stage_id": 5,
     "source": "seed",
-    "metadata": { "topic": "eval_system", "multi_turn": false }
+    "metadata": {
+      "topic": "eval_system",
+      "multi_turn": false
+    }
   },
   {
     "input_text": "User: What metric is used to evaluate summarization?\nAssistant:",
     "target_text": "Summarization is evaluated using passage compression ratio, factual retention checks, hallucination scoring, and semantic consistency against source passages.",
     "stage_id": 5,
     "source": "seed",
-    "metadata": { "topic": "eval_metrics", "multi_turn": false }
+    "metadata": {
+      "topic": "eval_metrics",
+      "multi_turn": false
+    }
   },
   {
     "input_text": "User: Can CIRCLE run synthetic generation using Groq API?\nAssistant:",
     "target_text": "Yes! CIRCLE supports multiple generator backends including local Ollama instances and Groq API cloud endpoints via environment configuration.",
     "stage_id": 5,
     "source": "seed",
-    "metadata": { "topic": "generator_backends", "multi_turn": false }
+    "metadata": {
+      "topic": "generator_backends",
+      "multi_turn": false
+    }
   },
   {
     "input_text": "User: What is learning rate warmup?\nAssistant:",
     "target_text": "Learning rate warmup gradually increases the learning rate from near-zero to the peak learning rate during early iterations to stabilize optimizer momentum and prevent early gradient explosion.",
     "stage_id": 5,
     "source": "seed",
-    "metadata": { "topic": "ml_basics", "multi_turn": false }
+    "metadata": {
+      "topic": "ml_basics",
+      "multi_turn": false
+    }
   },
   {
     "input_text": "User: How does CIRCLE prevent duplicate synthetic data?\nAssistant:",
     "target_text": "The synthetic generator computes semantic embedding similarities or text hashes against existing samples, filtering out near-duplicate prompts prior to saving.",
     "stage_id": 5,
     "source": "seed",
-    "metadata": { "topic": "generator_dedup", "multi_turn": false }
+    "metadata": {
+      "topic": "generator_dedup",
+      "multi_turn": false
+    }
   },
   {
     "input_text": "User: What is the role of Kubernetes in CIRCLE?\nAssistant:",
     "target_text": "Kubernetes provides container orchestration, automated pod lifecycle management, PersistentVolumeClaim volume mounting, horizontal pod scaling, and microservice isolation in production deployments.",
     "stage_id": 5,
     "source": "seed",
-    "metadata": { "topic": "k8s_deployment", "multi_turn": false }
+    "metadata": {
+      "topic": "k8s_deployment",
+      "multi_turn": false
+    }
   },
   {
     "input_text": "User: Explain the difference between Stage 3 and Stage 4.\nAssistant:",
     "target_text": "Stage 3 focuses on explicit syntax and grammatical well-formedness (subject-verb agreement, tenses, pronouns), whereas Stage 4 focuses on punctuation precision, clause boundaries, and sentence segmentation.",
     "stage_id": 5,
     "source": "seed",
-    "metadata": { "topic": "curriculum_stages", "multi_turn": false }
+    "metadata": {
+      "topic": "curriculum_stages",
+      "multi_turn": false
+    }
   },
   {
     "input_text": "User: What happens if an API key is missing?\nAssistant:",
     "target_text": "If a required API key (such as GROQ_API_KEY) is missing, the service raises a clear configuration exception during initialization and offers fallback local modes when available.",
     "stage_id": 5,
     "source": "seed",
-    "metadata": { "topic": "error_handling", "multi_turn": false }
+    "metadata": {
+      "topic": "error_handling",
+      "multi_turn": false
+    }
   },
   {
     "input_text": "User: How does CIRCLE format model loss during QLoRA training?\nAssistant:",
     "target_text": "CIRCLE uses standard cross-entropy loss over target token sequences with causal language modeling masks, averaging token losses across unmasked positions.",
     "stage_id": 5,
     "source": "seed",
-    "metadata": { "topic": "training_loss", "multi_turn": false }
+    "metadata": {
+      "topic": "training_loss",
+      "multi_turn": false
+    }
   },
   {
     "input_text": "User: What is the default optimizer used in CIRCLE training?\nAssistant:",
     "target_text": "CIRCLE defaults to AdamW optimizer (with weight decay 0.01) coupled with cosine learning rate schedules for stable parameter updates.",
     "stage_id": 5,
     "source": "seed",
-    "metadata": { "topic": "training_hyperparams", "multi_turn": false }
+    "metadata": {
+      "topic": "training_hyperparams",
+      "multi_turn": false
+    }
   },
   {
     "input_text": "User: How do microservices communicate in CIRCLE k8s deployment?\nAssistant:",
     "target_text": "Microservices communicate via standard HTTP REST APIs and internal Kubernetes ClusterIP Services exposed on dedicated service ports.",
     "stage_id": 5,
     "source": "seed",
-    "metadata": { "topic": "k8s_networking", "multi_turn": false }
+    "metadata": {
+      "topic": "k8s_networking",
+      "multi_turn": false
+    }
   },
   {
     "input_text": "User: What happens when all 5 curriculum stages are completed successfully?\nAssistant:",
     "target_text": "When all 5 stages pass their competence thresholds, the orchestrator updates loop state to COMPLETED, exports the final QLoRA checkpoint, and generates a pipeline summary report.",
     "stage_id": 5,
     "source": "seed",
-    "metadata": { "topic": "pipeline_completion", "multi_turn": false }
+    "metadata": {
+      "topic": "pipeline_completion",
+      "multi_turn": false
+    }
   },
   {
     "input_text": "User: Can I inspect historical run logs in CIRCLE?\nAssistant:",
     "target_text": "Yes, all structured logs, evaluation probe history, competence scores, and state snapshot files are persisted under the `logs/` directory and PVC mounts.",
     "stage_id": 5,
     "source": "seed",
-    "metadata": { "topic": "logging", "multi_turn": false }
+    "metadata": {
+      "topic": "logging",
+      "multi_turn": false
+    }
   },
   {
     "input_text": "User: Good job! The CIRCLE architecture is very comprehensive.\nAssistant:",
     "target_text": "Thank you! CIRCLE is designed to make training small language models structured, sample-efficient, and resilient through automated curriculum feedback loops.",
     "stage_id": 5,
     "source": "seed",
-    "metadata": { "topic": "acknowledgment", "multi_turn": false }
+    "metadata": {
+      "topic": "acknowledgment",
+      "multi_turn": false
+    }
   }
 ]

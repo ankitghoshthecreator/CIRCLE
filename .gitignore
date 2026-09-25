@@ -43,6 +43,9 @@ checkpoints/
 trainer/checkpoints/
 data/
 datasets/
+logs/*.jsonl
+logs/test_tmp/
+tmp*
 
 # IDEs & Editors
 .vscode/

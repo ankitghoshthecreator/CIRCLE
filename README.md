@@ -138,7 +138,7 @@ Benefits of this layout:
 - **QLoRA** — parameter-efficient fine-tuning
 - **Knowledge Distillation** — lightweight eval scoring
 - **Groq** (70B model) — critic/eval agent, hosted inference
-- **DeepSeek 32B** — local synthetic data generation
+- **Ollama / Qwen 2.5 Coder 7B** — local synthetic data generation
 - **Docker** — containerization of each pipeline stage
 - **Kubernetes** — orchestration of the train/eval/generate/retrain loop
 ---
@@ -147,25 +147,27 @@ Benefits of this layout:
  
 ```
 circle/
-├── trainer/            # PyTorch + QLoRA training job
+├── trainer/                # PyTorch + QLoRA training job
 │   ├── train.py
-│   ├── curriculum/     # per-stage dataset configs
+│   ├── checkpoint_tracker.py# 100th step periodic & lowest loss saver + loss_log.csv
+│   ├── curriculum/         # per-stage dataset configs
 │   └── checkpoints/
-├── eval/                # Groq-hosted critic agent
+├── eval/                   # Groq-hosted critic agent & RLAIF reward calculator
 │   ├── critique.py
-│   └── prompt_writer.py
-├── generator/           # local DeepSeek 32B data generation
-│   └── generate.py
-├── orchestrator/        # Kubernetes control loop
+│   ├── rl_reward.py
+│   └── failure_parser.py
+├── generator/              # local Ollama / DeepSeek data generation
+│   ├── generate.py
+│   └── rl_prompt_builder.py
+├── orchestrator/           # Kubernetes control loop & state machine
 │   ├── loop_controller.py
 │   └── k8s/
-│       ├── trainer-deployment.yaml
-│       ├── eval-deployment.yaml
-│       └── generator-deployment.yaml
-├── docker/
-│   ├── trainer.Dockerfile
-│   ├── eval.Dockerfile
-│   └── generator.Dockerfile
+├── scripts/                # CLI runners & utilities
+│   ├── rl_loop.py          # True RLAIF training loop runner
+│   ├── chat.py             # Interactive LLM terminal chat CLI
+│   ├── generate_chat_dataset.py # 1,000 diverse chat pair generator
+│   └── rl_monitor.py       # Live terminal training dashboard
+├── tests/                  # Full regression test suite
 └── README.md
 ```
  
@@ -173,36 +175,44 @@ circle/
  
 ## Setup & Usage
  
-> Note: exact commands depend on your environment; the structure below reflects the intended workflow.
- 
-1. Build and push containers for each stage:
+### 1. Install Dependencies
+```powershell
+python -m venv venv
+.\venv\Scripts\Activate.ps1
+pip install -r requirements.txt
 ```
-   docker build -t circle-trainer -f docker/trainer.Dockerfile .
-   docker build -t circle-eval -f docker/eval.Dockerfile .
-   docker build -t circle-generator -f docker/generator.Dockerfile .
+
+### 2. Run True RLAIF Training Loop
+```powershell
+# Mock Mode (Fast test execution)
+python scripts/rl_loop.py --stages 1 2 3 --rl-steps 5 --mock
+
+# Live Mode (Requires GROQ_API_KEY in .env + Ollama)
+python scripts/rl_loop.py --stages 1 2 3 4 5 --rl-steps 2000 --no-mock
 ```
-2. Deploy to Kubernetes:
+
+### 3. Generate 1,000 Diverse Conversational Pairs & QLoRA Fine-Tune
+```powershell
+# Step A: Generate 1,000 high-variety chat pairs via Ollama
+python scripts/generate_chat_dataset.py --count 1000
+
+# Step B: Train for 5,000 steps with automatic 100-step checkpointing & CSV loss logging
+python trainer/train.py --stage 5 --epochs 5 --batch-size 1 --grad-accum 1
 ```
-   kubectl apply -f orchestrator/k8s/
+
+### 4. Interactive Terminal Chat CLI
+Converse with your fine-tuned model checkpoint:
+```powershell
+python scripts/chat.py --checkpoint trainer/checkpoints/checkpoint_best
 ```
-3. Start the loop from Stage 1 (base English):
-```
-   python orchestrator/loop_controller.py --start-stage 1
-```
-4. Monitor stage transitions and critic reports via the orchestrator logs.
+
 ---
  
-## Limitations
+## Limitations & Features
  
-- GPT-2 as a base model caps the ceiling of what the curriculum can teach — later-stage gains (especially conversational understanding) are bounded by base model capacity, not just data quality.
-- The 4GB VRAM constraint limits batch size and context length during QLoRA fine-tuning, which shapes how much of each stage's dataset can be processed per training pass.
-- Critic-driven data generation is only as good as the 70B model's ability to correctly diagnose failure modes — miscategorized failures produce mistargeted (if still useful) generated data.
----
- 
-## Future Work
- 
-- Swap GPT-2 for a larger/more modern open base model to raise the curriculum's ceiling
-- Add automatic stage-advancement thresholds instead of manual promotion
-- Expand the replay buffer strategy to weighted sampling based on per-stage forgetting rate
-- Add a human-in-the-loop spot-check step between critique and data generation for high-stakes stages
+- **100th-Step Periodic & Best Loss Checkpointing**: Saves `checkpoint_step_100`, `checkpoint_step_200`, etc., and overwrites `checkpoint_best` whenever a new lowest loss is achieved.
+- **CSV Loss Monitoring**: Tracks `step` and `loss` on every step in `trainer/checkpoints/loss_log.csv` to monitor for overfitting.
+- **Smart Adapter Resolution**: `scripts/chat.py` automatically resolves QLoRA adapters from curriculum stage folders (`stage_5`, `stage_4`, etc.) and formats input as `User: <prompt>\nAssistant:`.
+- **4GB VRAM Optimization**: Uses QLoRA 4-bit quantization and gradient accumulation to run full curriculum fine-tuning on constrained hardware.
+
  

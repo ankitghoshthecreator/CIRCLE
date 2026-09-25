@@ -1,0 +1,32 @@
+{
+  "run_id": "run_20260922_174412_cc2cc3",
+  "current_stage": 7,
+  "current_iteration": 1,
+  "max_iterations_per_stage": 1,
+  "total_stages": 5,
+  "current_state": "complete",
+  "stage_advance_threshold": 0.85,
+  "stage_results": [
+    {
+      "stage_id": 6,
+      "iteration": 1,
+      "state": "training",
+      "mean_eval_score": 0.6166,
+      "overall_severity": "low",
+      "advance_to_next_stage": false,
+      "failure_modes_found": [],
+      "commission_requests": 0,
+      "samples_generated": 0,
+      "samples_validated": 0,
+      "samples_merged": 0,
+      "checkpoint_path": "D:\\CIRCLE\\trainer\\checkpoints\\stage_6",
+      "completed_at": "2026-09-22T17:44:36.307172+00:00"
+    }
+  ],
+  "error_log": [],
+  "started_at": "2026-09-22T17:44:12.105229+00:00",
+  "last_updated_at": "2026-09-22T17:44:36.307172+00:00",
+  "data_dir": "D:\\CIRCLE\\data",
+  "checkpoint_dir": "D:\\CIRCLE\\trainer\\checkpoints",
+  "log_dir": "D:\\CIRCLE\\./logs"
+}

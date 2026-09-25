@@ -159,8 +159,15 @@ class ClosedLoopOrchestrator:
 
         # ── Groq critic (optional) ────────────────────────────────
         self._critic = None
-        if GroqCriticAgentCls and self.groq_api_key and not self.mock_mode:
-            self._critic = GroqCriticAgentCls(api_key=self.groq_api_key)
+        # Enable Groq critic whenever a real API key is present,
+        # even in mock_mode — so the reward signal is real even when training is mocked.
+        if GroqCriticAgentCls and self.groq_api_key and self.groq_api_key != "your_groq_api_key_here":
+            try:
+                self._critic = GroqCriticAgentCls(api_key=self.groq_api_key)
+                logger.info("[Orchestrator] GroqCriticAgent initialised (live).")
+            except Exception as e:
+                logger.warning(f"[Orchestrator] GroqCriticAgent init failed: {e}")
+                self._critic = None
 
         # ── Tiered evaluator ─────────────────────────────────────
         if "TieredEvaluator" in self._components and "LightweightStudentEvaluator" in self._components:
@@ -212,6 +219,16 @@ class ClosedLoopOrchestrator:
             logger.info(f"[Train] MOCK MODE — skipping real training. Checkpoint placeholder: {ckpt}")
             return ckpt
 
+        # Gather any newly merged synthetic examples from the data directory
+        # so the trainer uses the enriched dataset, not just the static seed.
+        custom_examples = None
+        try:
+            from trainer.curriculum.dataset_handler import load_stage_dataset
+            custom_examples = load_stage_dataset(s.current_stage, data_dir=s.data_dir)
+            logger.info(f"[Train] Loaded {len(custom_examples)} examples (seed + synthetic) for Stage {s.current_stage}.")
+        except Exception as e:
+            logger.warning(f"[Train] Could not load enriched dataset: {e}. Using trainer default.")
+
         try:
             ckpt = self._train_stage_fn(
                 stage_id=s.current_stage,
@@ -221,6 +238,7 @@ class ClosedLoopOrchestrator:
                 lr=2e-4,
                 checkpoint_dir=s.checkpoint_dir,
                 data_dir=s.data_dir,
+                custom_examples=custom_examples,
             )
             logger.info(f"[Train] Stage {s.current_stage} training complete -> {ckpt}")
             return ckpt
@@ -319,12 +337,17 @@ class ClosedLoopOrchestrator:
                 logger.info("[Generate] No commissionable failure modes found. Skipping generation.")
                 return {"samples_generated": 0, "batch": None}
 
+            # Auto-detect backend from env: prefer ollama if GENERATOR_API_BASE is set
+            _api_base = os.getenv("GENERATOR_API_BASE", "")
+            _backend = "ollama" if "11434" in _api_base or "ollama" in _api_base.lower() else "mock"
+            _endpoint = _api_base.rstrip("/v1").rstrip("/") if _api_base else "http://127.0.0.1:11434"
+
             engine = self._components["LocalDataGeneratorEngine"](
-                backend="mock",
-                endpoint_url="http://127.0.0.1:11434",
+                backend=_backend,
+                endpoint_url=_endpoint,
             )
             batch = engine.generate_batch_from_prompts(prompt_batch, max_samples_per_spec=5)
-            logger.info(f"[Generate] Generated {batch.total_samples} synthetic samples for Stage {s.current_stage}.")
+            logger.info(f"[Generate] Generated {batch.total_samples} synthetic samples for Stage {s.current_stage} via '{_backend}'.")
             return {"samples_generated": batch.total_samples, "batch": batch}
 
         except Exception as e:

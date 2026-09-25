@@ -4,244 +4,349 @@
     "target_text": "Punctuated: Although it was raining, we decided to go for a run.",
     "stage_id": 4,
     "source": "seed",
-    "metadata": { "category": "clause_boundary", "difficulty": "easy" }
+    "metadata": {
+      "category": "clause_boundary",
+      "difficulty": "easy"
+    }
   },
   {
     "input_text": "Unpunctated: the training loop finished successfully loss dropped steadily we saved the checkpoint",
     "target_text": "Punctuated: The training loop finished successfully. Loss dropped steadily, and we saved the checkpoint.",
     "stage_id": 4,
     "source": "seed",
-    "metadata": { "category": "sentence_segmentation", "difficulty": "medium" }
+    "metadata": {
+      "category": "sentence_segmentation",
+      "difficulty": "medium"
+    }
   },
   {
     "input_text": "Unpunctated: its important to test the model before deployment",
     "target_text": "Punctuated: It's important to test the model before deployment.",
     "stage_id": 4,
     "source": "seed",
-    "metadata": { "category": "apostrophe", "difficulty": "easy" }
+    "metadata": {
+      "category": "apostrophe",
+      "difficulty": "easy"
+    }
   },
   {
     "input_text": "Unpunctated: she said we will evaluate the model performance tomorrow",
     "target_text": "Punctuated: She said, \"We will evaluate the model performance tomorrow.\"",
     "stage_id": 4,
     "source": "seed",
-    "metadata": { "category": "direct_quotation", "difficulty": "medium" }
+    "metadata": {
+      "category": "direct_quotation",
+      "difficulty": "medium"
+    }
   },
   {
     "input_text": "Unpunctated: we bought apples oranges bananas and grapes from the market",
     "target_text": "Punctuated: We bought apples, oranges, bananas, and grapes from the market.",
     "stage_id": 4,
     "source": "seed",
-    "metadata": { "category": "serial_comma", "difficulty": "easy" }
+    "metadata": {
+      "category": "serial_comma",
+      "difficulty": "easy"
+    }
   },
   {
     "input_text": "Unpunctated: whenever the learning rate is too high gradients explode",
     "target_text": "Punctuated: Whenever the learning rate is too high, gradients explode.",
     "stage_id": 4,
     "source": "seed",
-    "metadata": { "category": "introductory_clause", "difficulty": "easy" }
+    "metadata": {
+      "category": "introductory_clause",
+      "difficulty": "easy"
+    }
   },
   {
     "input_text": "Unpunctated: the model converged quickly it achieved high accuracy",
     "target_text": "Punctuated: The model converged quickly; it achieved high accuracy.",
     "stage_id": 4,
     "source": "seed",
-    "metadata": { "category": "semicolon", "difficulty": "medium" }
+    "metadata": {
+      "category": "semicolon",
+      "difficulty": "medium"
+    }
   },
   {
     "input_text": "Unpunctated: can you explain why the loss did not decrease during epoch two",
     "target_text": "Punctuated: Can you explain why the loss did not decrease during epoch two?",
     "stage_id": 4,
     "source": "seed",
-    "metadata": { "category": "question_mark", "difficulty": "easy" }
+    "metadata": {
+      "category": "question_mark",
+      "difficulty": "easy"
+    }
   },
   {
     "input_text": "Unpunctated: the user interface was well designed but the code had bugs",
     "target_text": "Punctuated: The user interface was well-designed, but the code had bugs.",
     "stage_id": 4,
     "source": "seed",
-    "metadata": { "category": "hyphenation_comma", "difficulty": "medium" }
+    "metadata": {
+      "category": "hyphenation_comma",
+      "difficulty": "medium"
+    }
   },
   {
     "input_text": "Unpunctated: what a remarkable improvement in convergence speed",
     "target_text": "Punctuated: What a remarkable improvement in convergence speed!",
     "stage_id": 4,
     "source": "seed",
-    "metadata": { "category": "exclamation_mark", "difficulty": "easy" }
+    "metadata": {
+      "category": "exclamation_mark",
+      "difficulty": "easy"
+    }
   },
   {
     "input_text": "Unpunctated: if you set the learning rate too low training takes forever",
     "target_text": "Punctuated: If you set the learning rate too low, training takes forever.",
     "stage_id": 4,
     "source": "seed",
-    "metadata": { "category": "conditional_clause", "difficulty": "easy" }
+    "metadata": {
+      "category": "conditional_clause",
+      "difficulty": "easy"
+    }
   },
   {
     "input_text": "Unpunctated: python pytorch and transformers are essential tools for modern deep learning",
     "target_text": "Punctuated: Python, PyTorch, and Transformers are essential tools for modern deep learning.",
     "stage_id": 4,
     "source": "seed",
-    "metadata": { "category": "serial_comma", "difficulty": "easy" }
+    "metadata": {
+      "category": "serial_comma",
+      "difficulty": "easy"
+    }
   },
   {
     "input_text": "Unpunctated: the researchers notebook contained all experiment details",
     "target_text": "Punctuated: The researcher's notebook contained all experiment details.",
     "stage_id": 4,
     "source": "seed",
-    "metadata": { "category": "possessive_apostrophe", "difficulty": "medium" }
+    "metadata": {
+      "category": "possessive_apostrophe",
+      "difficulty": "medium"
+    }
   },
   {
     "input_text": "Unpunctated: continuous integration runs unit tests automatically furthermore it deploys release builds",
     "target_text": "Punctuated: Continuous integration runs unit tests automatically; furthermore, it deploys release builds.",
     "stage_id": 4,
     "source": "seed",
-    "metadata": { "category": "conjunctive_adverb", "difficulty": "hard" }
+    "metadata": {
+      "category": "conjunctive_adverb",
+      "difficulty": "hard"
+    }
   },
   {
     "input_text": "Unpunctated: do you know where the log files are stored",
     "target_text": "Punctuated: Do you know where the log files are stored?",
     "stage_id": 4,
     "source": "seed",
-    "metadata": { "category": "question_mark", "difficulty": "easy" }
+    "metadata": {
+      "category": "question_mark",
+      "difficulty": "easy"
+    }
   },
   {
     "input_text": "Unpunctated: Paris France Tokyo Japan and London England are major metropolitan areas",
     "target_text": "Punctuated: Paris, France; Tokyo, Japan; and London, England are major metropolitan areas.",
     "stage_id": 4,
     "source": "seed",
-    "metadata": { "category": "complex_semicolon_list", "difficulty": "hard" }
+    "metadata": {
+      "category": "complex_semicolon_list",
+      "difficulty": "hard"
+    }
   },
   {
     "input_text": "Unpunctated: dont touch the power cord while the device is running",
     "target_text": "Punctuated: Don't touch the power cord while the device is running.",
     "stage_id": 4,
     "source": "seed",
-    "metadata": { "category": "contraction_apostrophe", "difficulty": "easy" }
+    "metadata": {
+      "category": "contraction_apostrophe",
+      "difficulty": "easy"
+    }
   },
   {
     "input_text": "Unpunctated: after analyzing the data the team presented their findings",
     "target_text": "Punctuated: After analyzing the data, the team presented their findings.",
     "stage_id": 4,
     "source": "seed",
-    "metadata": { "category": "introductory_phrase", "difficulty": "easy" }
+    "metadata": {
+      "category": "introductory_phrase",
+      "difficulty": "easy"
+    }
   },
   {
     "input_text": "Unpunctated: stop the process immediately",
     "target_text": "Punctuated: Stop the process immediately!",
     "stage_id": 4,
     "source": "seed",
-    "metadata": { "category": "imperative_exclamation", "difficulty": "easy" }
+    "metadata": {
+      "category": "imperative_exclamation",
+      "difficulty": "easy"
+    }
   },
   {
     "input_text": "Unpunctated: the main server crashed however the failover mechanism prevented downtime",
     "target_text": "Punctuated: The main server crashed; however, the failover mechanism prevented downtime.",
     "stage_id": 4,
     "source": "seed",
-    "metadata": { "category": "semicolon_however", "difficulty": "medium" }
+    "metadata": {
+      "category": "semicolon_however",
+      "difficulty": "medium"
+    }
   },
   {
     "input_text": "Unpunctated: Dr Smith asked who left the GPU instance running overnight",
     "target_text": "Punctuated: Dr. Smith asked, \"Who left the GPU instance running overnight?\"",
     "stage_id": 4,
     "source": "seed",
-    "metadata": { "category": "abbreviation_quote_question", "difficulty": "hard" }
+    "metadata": {
+      "category": "abbreviation_quote_question",
+      "difficulty": "hard"
+    }
   },
   {
     "input_text": "Unpunctated: the models accuracy increased from 75 percent to 92 percent",
     "target_text": "Punctuated: The model's accuracy increased from 75 percent to 92 percent.",
     "stage_id": 4,
     "source": "seed",
-    "metadata": { "category": "possessive_apostrophe", "difficulty": "medium" }
+    "metadata": {
+      "category": "possessive_apostrophe",
+      "difficulty": "medium"
+    }
   },
   {
     "input_text": "Unpunctated: first prepare the dataset second define the architecture third start training",
     "target_text": "Punctuated: First, prepare the dataset; second, define the architecture; third, start training.",
     "stage_id": 4,
     "source": "seed",
-    "metadata": { "category": "sequential_semicolon", "difficulty": "hard" }
+    "metadata": {
+      "category": "sequential_semicolon",
+      "difficulty": "hard"
+    }
   },
   {
     "input_text": "Unpunctated: is this the final version of the curriculum configuration",
     "target_text": "Punctuated: Is this the final version of the curriculum configuration?",
     "stage_id": 4,
     "source": "seed",
-    "metadata": { "category": "interrogative", "difficulty": "easy" }
+    "metadata": {
+      "category": "interrogative",
+      "difficulty": "easy"
+    }
   },
   {
     "input_text": "Unpunctated: although QLoRA reduces memory it slightly slows down throughput",
     "target_text": "Punctuated: Although QLoRA reduces memory, it slightly slows down throughput.",
     "stage_id": 4,
     "source": "seed",
-    "metadata": { "category": "subordinate_clause", "difficulty": "medium" }
+    "metadata": {
+      "category": "subordinate_clause",
+      "difficulty": "medium"
+    }
   },
   {
     "input_text": "Unpunctated: wow that evaluation score is amazing",
     "target_text": "Punctuated: Wow, that evaluation score is amazing!",
     "stage_id": 4,
     "source": "seed",
-    "metadata": { "category": "interjection", "difficulty": "easy" }
+    "metadata": {
+      "category": "interjection",
+      "difficulty": "easy"
+    }
   },
   {
     "input_text": "Unpunctated: the project leads goal is clear achieve zero hallucination",
     "target_text": "Punctuated: The project lead's goal is clear: achieve zero hallucination.",
     "stage_id": 4,
     "source": "seed",
-    "metadata": { "category": "colon_possessive", "difficulty": "medium" }
+    "metadata": {
+      "category": "colon_possessive",
+      "difficulty": "medium"
+    }
   },
   {
     "input_text": "Unpunctated: we need three things GPU memory high quality data and patience",
     "target_text": "Punctuated: We need three things: GPU memory, high-quality data, and patience.",
     "stage_id": 4,
     "source": "seed",
-    "metadata": { "category": "colon_list", "difficulty": "medium" }
+    "metadata": {
+      "category": "colon_list",
+      "difficulty": "medium"
+    }
   },
   {
     "input_text": "Unpunctated: the paper titled Attention Is All You Need changed NLP forever",
     "target_text": "Punctuated: The paper titled \"Attention Is All You Need\" changed NLP forever.",
     "stage_id": 4,
     "source": "seed",
-    "metadata": { "category": "title_quotes", "difficulty": "medium" }
+    "metadata": {
+      "category": "title_quotes",
+      "difficulty": "medium"
+    }
   },
   {
     "input_text": "Unpunctated: while the generator creates probes the evaluator scores them",
     "target_text": "Punctuated: While the generator creates probes, the evaluator scores them.",
     "stage_id": 4,
     "source": "seed",
-    "metadata": { "category": "introductory_while", "difficulty": "easy" }
+    "metadata": {
+      "category": "introductory_while",
+      "difficulty": "easy"
+    }
   },
   {
     "input_text": "Unpunctated: failure is not an option we must succeed",
     "target_text": "Punctuated: Failure is not an option; we must succeed.",
     "stage_id": 4,
     "source": "seed",
-    "metadata": { "category": "semicolon", "difficulty": "easy" }
+    "metadata": {
+      "category": "semicolon",
+      "difficulty": "easy"
+    }
   },
   {
     "input_text": "Unpunctated: childrens educational games should be interactive and engaging",
     "target_text": "Punctuated: Children's educational games should be interactive and engaging.",
     "stage_id": 4,
     "source": "seed",
-    "metadata": { "category": "plural_possessive_apostrophe", "difficulty": "medium" }
+    "metadata": {
+      "category": "plural_possessive_apostrophe",
+      "difficulty": "medium"
+    }
   },
   {
     "input_text": "Unpunctated: how many epochs remain in stage three",
     "target_text": "Punctuated: How many epochs remain in stage three?",
     "stage_id": 4,
     "source": "seed",
-    "metadata": { "category": "interrogative", "difficulty": "easy" }
+    "metadata": {
+      "category": "interrogative",
+      "difficulty": "easy"
+    }
   },
   {
     "input_text": "Unpunctated: the system state updated from INITIALIZING to GENERATING_DATA",
     "target_text": "Punctuated: The system state updated from INITIALIZING to GENERATING_DATA.",
     "stage_id": 4,
     "source": "seed",
-    "metadata": { "category": "declarative", "difficulty": "easy" }
+    "metadata": {
+      "category": "declarative",
+      "difficulty": "easy"
+    }
   },
   {
     "input_text": "Unpunctated: in conclusion curriculum learning accelerates training stability",
     "target_text": "Punctuated: In conclusion, curriculum learning accelerates training stability.",
     "stage_id": 4,
     "source": "seed",
-    "metadata": { "category": "transitional_phrase", "difficulty": "easy" }
+    "metadata": {
+      "category": "transitional_phrase",
+      "difficulty": "easy"
+    }
   }
 ]
